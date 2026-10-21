@@ -13,7 +13,9 @@ export function installNetguard() {
   const real = {
     connect: net.Socket.prototype.connect, lookup: dns.lookup, fetch: globalThis.fetch, send: dgram.Socket.prototype.send,
   };
-  const hostOf = (args) => {
+  const hostOf = (rawArgs) => {
+    // Node's net.connect hands socket.connect() a normalized ARRAY [options, cb] as the first argument; unwrap it.
+    const args = Array.isArray(rawArgs[0]) ? rawArgs[0] : rawArgs;
     const a = args[0];
     if (a && typeof a === 'object' && !Array.isArray(a)) return a.path ? 'unix-socket' : (a.host || 'localhost');
     if (typeof a === 'string' && Number.isNaN(Number(a))) return 'unix-socket';
@@ -61,9 +63,10 @@ export async function netguardSelfTest() {
   const refused = async (label, fn) => { try { await fn(); tried.push(`${label}: NOT blocked`); } catch (e) { tried.push(/network blocked/.test(e.message) ? `${label}: blocked` : `${label}: failed differently (${e.message})`); } };
   await refused('fetch', () => fetch('http://self-test.invalid/'));
   await refused('socket', () => new Promise((_, rej) => { const s = new net.Socket(); s.on('error', rej); try { s.connect(80, 'self-test.invalid'); } catch (e) { rej(e); } }));
+  await refused('socket-ip', () => new Promise((_, rej) => { try { const s = net.connect({ host: ['192', '0', '2', '1'].join('.'), port: 80 }); s.on('error', rej); } catch (e) { rej(e); } }));
   await refused('dns', () => new Promise((res, rej) => dns.lookup('self-test.invalid', (e) => (e ? rej(e) : res()))));
   await refused('udp', () => { const s = dgram.createSocket('udp4'); try { s.send('x', 9, 'self-test.invalid'); } finally { s.close(); } });
   const blocked = guard.attempts.length - before;
   guard.attempts.length = before; // self-test attempts are not real attempts
-  return { ok: tried.every((t) => t.endsWith(': blocked')) && blocked === 4, blocked, detail: tried.join('; ') };
+  return { ok: tried.every((t) => t.endsWith(': blocked')) && blocked === 5, blocked, detail: tried.join('; ') };
 }

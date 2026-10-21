@@ -7,8 +7,8 @@ import { installNetguard, netguardSelfTest } from '../src/netguard.js';
 test('self-test: every route out is refused and recorded, none reaches the network', async () => {
   const r = await netguardSelfTest();
   assert.equal(r.ok, true, r.detail);
-  assert.equal(r.blocked, 4);
-  assert.match(r.detail, /fetch: blocked.*socket: blocked.*dns: blocked.*udp: blocked/);
+  assert.equal(r.blocked, 5);
+  assert.match(r.detail, /fetch: blocked.*socket: blocked.*socket-ip: blocked.*dns: blocked.*udp: blocked/);
   installNetguard().restore();
 });
 
@@ -38,4 +38,13 @@ test('restore puts the real functions back', async () => {
   assert.notEqual(net.Socket.prototype.connect, before);
   g.restore();
   assert.equal(net.Socket.prototype.connect, before);
+});
+
+test('raw IP-literal sockets are refused and recorded as socket:<ip>', async () => {
+  const g = installNetguard();
+  assert.throws(() => net.connect({ host: '192.0.2.1', port: 80 }), /network blocked: 192\.0\.2\.1/);
+  assert.throws(() => net.connect(80, '192.0.2.2'), /network blocked: 192\.0\.2\.2/);
+  assert.throws(() => http.get({ host: '192.0.2.3', port: 80 }), /network blocked: 192\.0\.2\.3/);
+  assert.deepEqual(g.attempts.filter((a) => a.startsWith('socket:')), ['socket:192.0.2.1', 'socket:192.0.2.2', 'socket:192.0.2.3']);
+  g.restore();
 });
