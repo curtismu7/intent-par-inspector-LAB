@@ -9,7 +9,9 @@
   "engines": { "node": ">=20" },
   "scripts": {
     "start": "npm start -w server",
-    "test": "npm test -w server && node --test scripts/*.test.mjs",
+    "build": "npm run build -w web",
+    "dev": "echo \"run: npm run dev -w server  and  npm run dev -w web (UI on http://localhost:4772/)\"",
+    "test": "npm test -w server && npm test -w web && node --test scripts/*.test.mjs",
     "doctor": "node scripts/doctor.mjs",
     "content-pack": "node scripts/validate-content-pack.mjs",
     "prepare": "git config core.hooksPath .githooks || true"

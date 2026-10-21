@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { hostCheck, sameOriginWrites, scanHosts } from './safety.js';
 import { createHealth } from './health.js';
-import { createMockAS, CLIENTS, ISSUER, PAR_TTL_S } from './as.js';
+import { randomBytes } from 'node:crypto';
+import { createMockAS, CLIENTS, ISSUER, PAR_TTL_S, pkceChallenge } from './as.js';
 import { runScenario, runAll } from './runner.js';
 import { SCENARIOS, VERTICALS, getScenario, getVertical, storyCorpus, renderScenario, baseIntent } from './stories.js';
 
@@ -30,9 +31,18 @@ export function createApp({ health = createHealth(), as = createMockAS() } = {})
     res.json({
       verticals: VERTICALS.map(({ id, name, cast }) => ({ id, name, cast })),
       vertical: v.id, intent: baseIntent(v), issuer: ISSUER, parTtlSeconds: PAR_TTL_S,
-      clients: Object.entries(CLIENTS).map(([id, c]) => ({ id, name: c.name, requirePar: c.require_par })),
+      clients: Object.entries(CLIENTS).map(([id, c]) => ({ id, name: c.name, requirePar: c.require_par, redirectUri: c.redirect_uris[0] })),
       scenarios: SCENARIOS.map((s) => { const r = renderScenario(s, v); return { id: r.id, slug: r.slug, kind: r.kind, title: r.title, takeaway: r.takeaway, expectedOutcome: r.outcome, steps: r.steps.length }; }),
     });
+  });
+  // Hand-driven builder: a fresh PKCE pair plus the chosen mock client's throwaway credentials, so the SE can push a request and
+  // see client authentication in the raw message. The catalog itself never carries secrets. Mock clients only; the secret means nothing elsewhere.
+  api.get('/builder', (req, res) => {
+    const id = req.query.client || 'agent-app';
+    const c = CLIENTS[id];
+    if (!c) return bad(res, 'unknown client');
+    const verifier = randomBytes(32).toString('base64url');
+    res.json({ client_id: id, client_secret: c.secret, redirect_uri: c.redirect_uris[0], code_verifier: verifier, code_challenge: pkceChallenge(verifier), code_challenge_method: 'S256', mock: true });
   });
   api.post('/run', (req, res) => {
     const { scenario, vertical = VERTICALS[0].id } = req.body || {};

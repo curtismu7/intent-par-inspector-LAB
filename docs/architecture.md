@@ -1,4 +1,4 @@
-# Architecture (step IP0: core)
+# Architecture (steps IP0 core, IP1 web UI)
 
 ```
 agent app ──POST /as/par──────────▶ ┐
@@ -25,3 +25,13 @@ agent app ──POST /rs/execute──────▶     mock resource server: 
 | JWT signature check at the resource server | The resource server's "execute" |
 
 Strictness choices that go beyond the RFC, on purpose: parameters beside `request_uri` are refused (the RFC lets a server ignore them), unknown PAR parameters are refused, an intent is required, and a token carries exactly one intent that runs once.
+
+## Web UI (step IP1)
+
+`web/` is a React + Vite SPA served by the same Express app from `web/dist`, so the browser only ever talks to one origin (same-origin writes, no CORS).
+
+- One session model (`web/src/lib/session.js`) feeds every tab: it is either a scenario trace from `POST /api/run` or the messages of the hand-driven flow, in the same shape (`steps` plus `messages` with raw request and response text).
+- The hand-driven flow (`useWorkbench`) calls `GET /api/builder` for PKCE and the mock client's credentials, then `POST /as/par`, `GET /as/authorize`, `POST /as/consent`, `POST /as/token`, `POST /rs/execute` directly and records each call as a trace message.
+- Tabs: Request (builder, push, request_uri), Server (authorize, consent screen, message log, scenarios, story), Token (raw mock token, claims with the intent claims marked, execute), Diagram (ReactFlow, Simulate, Reset, speed), Raw (full message text).
+- Everything typed or echoed is rendered as React text nodes through `Inert`; control and bidi characters become `[U+XXXX]` chips. Tokens are only decoded, never verified or signed, in the page.
+- Tests (`vitest`): the fake `fetch` routes to the real mock AS core and scenario runner, so the UI is tested against the real behaviour without sockets.

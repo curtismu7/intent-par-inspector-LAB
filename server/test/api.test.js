@@ -91,7 +91,7 @@ test('live mock AS over HTTP: form-encoded PAR -> authorize -> consent -> token 
 
 test('Host check: a non-loopback Host header is refused on every route (DNS rebinding)', async () => {
   await withServer(async (base) => {
-    for (const path of ['/api/health', '/api/catalog', '/as/jwks']) {
+    for (const path of ['/api/health', '/api/catalog', '/api/builder', '/as/jwks']) {
       const r = await rawHttp(`${base}${path}`, { headers: { host: 'rebind.example.invalid' } });
       assert.equal(r.status, 403, path);
     }
@@ -128,5 +128,23 @@ test('security headers: no x-powered-by, nosniff', async () => {
     const r = await fetch(`${base}/api/health`);
     assert.equal(r.headers.get('x-powered-by'), null);
     assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+  });
+});
+
+test('builder: fresh PKCE pair and mock client credentials; the pair is valid at the mock AS; unknown client refused', async () => {
+  await withServer(async (base) => {
+    const a = await fetch(`${base}/api/builder?client=partner-app`).then((r) => r.json());
+    const b = await fetch(`${base}/api/builder?client=partner-app`).then((r) => r.json());
+    assert.equal(a.client_id, 'partner-app');
+    assert.equal(a.mock, true);
+    assert.notEqual(a.code_verifier, b.code_verifier);
+    assert.equal(a.code_challenge, (await import('../src/as.js')).pkceChallenge(a.code_verifier));
+    assert.equal((await fetch(`${base}/api/builder?client=nope`)).status, 400);
+    const cat = await fetch(`${base}/api/catalog`).then((r) => r.json());
+    assert.ok(cat.clients.every((c) => c.redirectUri && c.secret === undefined));
+    const par = await fetch(`${base}/as/par`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({
+      client_id: a.client_id, client_secret: a.client_secret, response_type: 'code', redirect_uri: a.redirect_uri, scope: 'intent',
+      code_challenge: a.code_challenge, code_challenge_method: 'S256', intent: { action: 'payments.transfer', amount: 5, currency: 'USD', resource: 'https://bank.example.invalid/a' } }) });
+    assert.equal(par.status, 201);
   });
 });

@@ -50,7 +50,8 @@ test('README is true: default port, commands exist, endpoints are real', () => {
   const pkg = JSON.parse(read('package.json'));
   for (const s of ['doctor', 'start', 'test']) assert.ok(pkg.scripts[s], s);
   assert.match(readme, /localhost:4771/);
-  assert.match(readme, /no web UI yet/i);
+  assert.match(readme, /step IP1, the web UI/i);
+  for (const route of ['/api/builder']) assert.ok(readme.includes(route), route);
   for (const route of ['/as/par', '/as/authorize', '/as/consent', '/as/token', '/rs/execute', '/as/jwks', '/api/run-all']) assert.ok(readme.includes(route), route);
   const ports = [...new Set([...readme.matchAll(/localhost:(\d{4,5})/g)].map((m) => Number(m[1])))];
   for (const p of ports) assert.equal(portProblem(p), null, String(p));

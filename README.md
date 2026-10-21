@@ -2,7 +2,7 @@
 
 An SE demo that shows how Pushed Authorization Requests (RFC 9126) and intent binding work, against a **mock** authorization server. No tenant, no credentials, no outbound network.
 
-Status: **step IP0, the core**. The server, the mock authorization server, the story engine and the tests exist. There is **no web UI yet** (step IP1): you drive it with `curl` or the JSON API.
+Status: **step IP1, the web UI**, on top of the IP0 core. A React + Vite UI with five tabs (Request, Server, Token, Diagram, Raw), a hand-driven request builder, a tamper-scenario picker with a story player, a ReactFlow sequence diagram (movable boxes, Simulate, Reset, speed), a persona picker, presenter mode and dark/light themes. You can still drive everything with `curl` or the JSON API.
 
 ## What it shows
 
@@ -20,10 +20,13 @@ Needs Node 20 or later.
 
 ```
 npm install
+npm run build         # builds the UI into web/dist (the server serves it)
 npm run doctor        # preflight: node, bind, port, netguard self-test, story hosts, all scenarios
-npm start             # http://localhost:4771/
-npm test              # server tests and repo checks
+npm start             # http://localhost:4771/  (UI + mock AS on one origin)
+npm test              # server tests, web tests (vitest) and repo checks
 ```
+
+UI development: `npm run dev -w server` (API, port 4771) and `npm run dev -w web` (Vite, http://localhost:4772/, proxies /api, /as and /rs to the API).
 
 Port 4771 (set `PORT` in `.env` or the environment; allowed range 4700-5299).
 
@@ -36,7 +39,7 @@ curl -s -X POST http://localhost:4771/api/run-all -H 'content-type: application/
 
 `POST /api/run` returns the whole trace: every message with a W3C `traceparent`, who talked to whom, the raw request and response text, the verdict, and the decoded mock token.
 
-The mock servers are also live for hand-driven use: `POST /as/par`, `GET /as/authorize`, `POST /as/consent`, `POST /as/token`, `POST /rs/execute`, `GET /as/jwks`. The mock clients are `agent-app` and `partner-app` (PAR required) and `legacy-web` (PAR not required); their secrets are `mock-secret-<client>` and mean nothing outside this process.
+The mock servers are also live for hand-driven use: `POST /as/par`, `GET /as/authorize`, `POST /as/consent`, `POST /as/token`, `POST /rs/execute`, `GET /as/jwks`. `GET /api/builder?client=agent-app` hands the UI a fresh PKCE pair and the mock client's throwaway credentials. The mock clients are `agent-app` and `partner-app` (PAR required) and `legacy-web` (PAR not required); their secrets are `mock-secret-<client>` and mean nothing outside this process.
 
 ## Stories
 
@@ -48,4 +51,4 @@ Loopback only, Host check, same-origin writes, zero real outbound (netguard), mo
 
 ## Not done yet
 
-The web UI and ReactFlow diagram (IP1), Docker publish and shelf registration (the entry is in `docs/shelf-entry.json`, `composeFile` empty), the Learning Hub diagram links. The catalog id `C40` in the content pack is a placeholder.
+Docker publish and shelf registration (the entry is in `docs/shelf-entry.json`, `composeFile` empty), the Learning Hub diagram links. The catalog id `C40` in the content pack is a placeholder.
