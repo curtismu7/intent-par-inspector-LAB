@@ -1,0 +1,8 @@
+{
+  "name": "@intent-par-inspector/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Placeholder for step IP1 (React + Vite UI). No code yet.",
+  "scripts": { "test": "echo \"web: no tests until step IP1\"" }
+}

@@ -1,0 +1,257 @@
+{
+  "schema": "demo-content-pack/1",
+  "id": "intent-par-inspector",
+  "title": "Intent / PAR Inspector",
+  "version": "0.1.0",
+  "demo": {
+    "id": "intent-par-inspector",
+    "name": "Intent / PAR Inspector",
+    "catalog": "C40",
+    "baseUrl": "http://localhost:4771",
+    "doctor": "/api/health",
+    "tags": [
+      "par",
+      "rfc-9126",
+      "intent-binding",
+      "rar",
+      "mock"
+    ]
+  },
+  "glossary": [
+    {
+      "id": "par",
+      "term": "Pushed Authorization Request (PAR)",
+      "definition": "RFC 9126. The client sends the authorization request parameters straight to the authorization server over an authenticated back channel and gets back a short-lived, one-time request_uri. The browser then carries only client_id and request_uri.",
+      "aliases": [
+        "pushed authorization request",
+        "RFC 9126"
+      ]
+    },
+    {
+      "id": "request-uri",
+      "term": "request_uri",
+      "definition": "A reference to a pushed request, such as urn:ietf:params:oauth:request_uri:abc. It is short-lived (60 seconds here), single-use, and bound to the client that pushed it."
+    },
+    {
+      "id": "intent",
+      "term": "Intent",
+      "definition": "What the agent or user is asking to do: the action, the amount and currency, and the resource it applies to, plus a nonce. The authorization server binds it at PAR time and every later hop checks it is unchanged."
+    },
+    {
+      "id": "intent-binding",
+      "term": "Intent binding",
+      "definition": "Holding the intent on the server from PAR onward and tying it to the consent, the code and the token by hash, so a token only works for the exact thing the user approved."
+    },
+    {
+      "id": "authorization-details",
+      "term": "authorization_details",
+      "definition": "RFC 9396 Rich Authorization Requests. A JSON array that says in structured form what a token is for. This mock copies the bound intent into it.",
+      "aliases": [
+        "RAR",
+        "RFC 9396"
+      ]
+    },
+    {
+      "id": "require-par",
+      "term": "Require PAR",
+      "definition": "A client setting (require_pushed_authorization_requests in RFC 9126). When on, the authorization endpoint refuses any request that does not use a request_uri."
+    },
+    {
+      "id": "single-use-intent",
+      "term": "Single-use intent",
+      "definition": "A token issued for one intent executes it once. A second run, even of the same action, is refused by the resource server."
+    }
+  ],
+  "sources": [
+    {
+      "id": "rfc9126",
+      "title": "RFC 9126: OAuth 2.0 Pushed Authorization Requests",
+      "url": "https://www.rfc-editor.org/rfc/rfc9126",
+      "kind": "standard",
+      "use": "PAR endpoint rules, request_uri lifetime and one-time use, require_pushed_authorization_requests",
+      "status": "not-read",
+      "checked": "2026-10-21"
+    },
+    {
+      "id": "rfc9396",
+      "title": "RFC 9396: OAuth 2.0 Rich Authorization Requests",
+      "url": "https://www.rfc-editor.org/rfc/rfc9396",
+      "kind": "standard",
+      "use": "authorization_details shape used for the bound intent",
+      "status": "not-read",
+      "checked": "2026-10-21"
+    },
+    {
+      "id": "rfc7636",
+      "title": "RFC 7636: Proof Key for Code Exchange",
+      "url": "https://www.rfc-editor.org/rfc/rfc7636",
+      "kind": "standard",
+      "use": "S256 code_challenge required by the mock",
+      "status": "not-read",
+      "checked": "2026-10-21"
+    }
+  ],
+  "cards": [
+    {
+      "id": "try-happy",
+      "label": "Run the happy path",
+      "description": "Push, approve and execute with the intent intact.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-S01"
+      },
+      "terms": [
+        "par",
+        "request-uri",
+        "intent"
+      ],
+      "story": "S01"
+    },
+    {
+      "id": "try-hitl",
+      "label": "Agent proposes, human approves",
+      "description": "Mark approves one exact plane ticket; the token works for nothing else.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-S02"
+      },
+      "terms": [
+        "intent-binding",
+        "single-use-intent"
+      ],
+      "story": "S02"
+    },
+    {
+      "id": "try-tamper",
+      "label": "Tamper with the request",
+      "description": "Edit the amount, swap the resource, replay or expire the request_uri.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-S03"
+      },
+      "terms": [
+        "request-uri",
+        "intent-binding"
+      ],
+      "story": "S03"
+    },
+    {
+      "id": "try-contrast",
+      "label": "Contrast: no PAR",
+      "description": "The same attack on a client that is not required to push.",
+      "group": "try-it",
+      "action": {
+        "type": "route",
+        "href": "/#scenario-S13"
+      },
+      "terms": [
+        "require-par"
+      ],
+      "story": "S13"
+    },
+    {
+      "id": "concept-par",
+      "label": "What PAR changes",
+      "description": "Why the browser stops carrying the request.",
+      "group": "concept",
+      "action": {
+        "type": "route",
+        "href": "/#concept-par"
+      },
+      "terms": [
+        "par",
+        "authorization-details"
+      ]
+    },
+    {
+      "id": "ref-doctor",
+      "label": "Doctor and health",
+      "description": "Preflight checks and the demo-health/1 endpoint.",
+      "group": "setup",
+      "action": {
+        "type": "route",
+        "href": "/api/health"
+      }
+    }
+  ],
+  "stories": [
+    {
+      "id": "S01",
+      "title": "Push, approve, execute: the intent travels intact",
+      "say": "The intent is pushed once, held by the server, shown to the user, copied into the token, and checked again when the token is used."
+    },
+    {
+      "id": "S02",
+      "title": "The agent proposes, the human approves the exact intent",
+      "say": "The approval is for one specific action. The same token cannot be reused for a dearer one, a different target, or a second run."
+    },
+    {
+      "id": "S03",
+      "title": "Amount edited in the browser link",
+      "say": "With PAR, parameters beside request_uri are refused, so editing the link cannot change what was pushed."
+    },
+    {
+      "id": "S04",
+      "title": "Approval submitted for a different intent",
+      "say": "Consent is bound to the intent hash. An approval that names a different intent is refused, so a swapped consent screen cannot launder an approval."
+    },
+    {
+      "id": "S05",
+      "title": "Resource swapped at the token request",
+      "say": "A token request may not change the bound intent. The server compares it with what was pushed and approved."
+    },
+    {
+      "id": "S06",
+      "title": "Valid token, different target",
+      "say": "A genuine token is still only good for its own intent. The resource server compares what is attempted with the bound intent."
+    },
+    {
+      "id": "S07",
+      "title": "Valid token, bigger amount",
+      "say": "The approved amount is a ceiling that is also a floor: the action must equal the intent, not merely stay under a scope."
+    },
+    {
+      "id": "S08",
+      "title": "request_uri replayed",
+      "say": "A request_uri is one-time. Whoever sees it in a log or history cannot use it again."
+    },
+    {
+      "id": "S09",
+      "title": "request_uri used after it expired",
+      "say": "A pushed request lives for 60 seconds. A stale link is useless."
+    },
+    {
+      "id": "S10",
+      "title": "request_uri presented by another client",
+      "say": "A request_uri belongs to the client that pushed it."
+    },
+    {
+      "id": "S11",
+      "title": "Pushed request with no intent",
+      "say": "This server will not issue authorization without knowing what it is for."
+    },
+    {
+      "id": "S12",
+      "title": "Inline parameters when PAR is required",
+      "say": "When a client is set to require PAR, an authorize request with inline parameters is refused outright. That is what makes PAR enforceable."
+    },
+    {
+      "id": "S13",
+      "title": "Contrast: no PAR, the link can be edited",
+      "say": "Without PAR the intent rides in the browser, where it can be changed. The server binds whatever arrives, so the token faithfully carries the edited intent."
+    },
+    {
+      "id": "S14",
+      "title": "Token edited to raise the amount",
+      "say": "The intent claim is signed. Editing it breaks the signature."
+    },
+    {
+      "id": "S15",
+      "title": "Unregistered parameter in the push",
+      "say": "This server is strict: parameters it does not know are refused rather than silently ignored."
+    }
+  ]
+}

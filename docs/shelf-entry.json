@@ -1,0 +1,16 @@
+{
+  "demos": [
+    {
+      "id": "intent-par-inspector",
+      "name": "Intent / PAR Inspector",
+      "catalogId": "C40",
+      "kind": "Demo",
+      "description": "Push an authorization request to a mock server (RFC 9126), watch the intent get bound into the request_uri, consent and token, and see tampering, replay and expiry refused.",
+      "url": "http://localhost:4771",
+      "healthPath": "/api/health",
+      "composeFile": "",
+      "composeOverlays": [],
+      "notes": "Host-run: npm start (port 4771). Mock only: no tenant, no credentials. Docker publish arrives with the integration step; composeFile stays empty until then."
+    }
+  ]
+}

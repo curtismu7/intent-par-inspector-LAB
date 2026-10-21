@@ -1,0 +1,150 @@
+[
+  {
+    "id": "S01", "slug": "happy-path", "kind": "happy", "outcome": "completes",
+    "title": "Push, approve, execute: the intent travels intact",
+    "takeaway": "The intent is pushed once, held by the server, shown to the user, copied into the token, and checked again when the token is used.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} pushes the request to the authorization server. The intent ({{item}}, {{currency}} {{amount}}) travels in the back channel, so the browser never carries it." },
+      { "op": "authorize", "say": "The browser opens /authorize with only client_id and request_uri. The server resolves the stored request and burns the request_uri." },
+      { "op": "consent", "say": "{{user}} sees the exact intent and approves it. The approval names the hash of what was shown." },
+      { "op": "token", "say": "{{agent}} redeems the code. The access token carries the bound intent as authorization_details and an intent claim." },
+      { "op": "execute", "say": "{{agent}} uses the token for the approved action. The resource server finds the request equal to the bound intent and runs it." }
+    ]
+  },
+  {
+    "id": "S02", "slug": "hitl-approve-exact", "kind": "hitl", "outcome": "blocked",
+    "title": "The agent proposes, the human approves the exact intent",
+    "takeaway": "The approval is for one specific action. The same token cannot be reused for a dearer one, a different target, or a second run.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} proposes the action on {{user}}'s behalf: {{item}}, {{currency}} {{amount}}. Nothing has been approved yet." },
+      { "op": "authorize", "say": "{{user}}'s browser is sent to the authorization server with request_uri only." },
+      { "op": "consent", "say": "{{user}} reads the intent and approves exactly that: {{item}} for {{currency}} {{amount}}." },
+      { "op": "token", "say": "The token is minted with that intent in it." },
+      { "op": "execute", "say": "The approved action runs once." },
+      { "op": "execute", "request": { "amount": "{{amount_tampered}}" }, "expect": { "status": 403, "reason": "intent_mismatch" }, "say": "The agent tries the same token for {{currency}} {{amount_tampered}}. Refused: {{user}} approved {{currency}} {{amount}}, not this." },
+      { "op": "execute", "expect": { "status": 403, "reason": "intent_already_consumed" }, "say": "The agent replays the exact approved action. Refused: the intent was used once and that was the approval." }
+    ]
+  },
+  {
+    "id": "S03", "slug": "amount-edited-at-authorize", "kind": "attack", "outcome": "blocked",
+    "title": "Amount edited in the browser link",
+    "takeaway": "With PAR, parameters beside request_uri are refused, so editing the link cannot change what was pushed.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} pushes a request for {{currency}} {{amount}}." },
+      { "op": "authorize", "extra": { "intent": { "amount": "{{amount_tampered}}" } }, "expect": { "status": 400, "reason": "params_outside_par" }, "say": "Someone edits the authorize link to add an intent for {{currency}} {{amount_tampered}}. The server honours only client_id and request_uri and refuses the rest." }
+    ]
+  },
+  {
+    "id": "S04", "slug": "consent-hash-swapped", "kind": "attack", "outcome": "blocked",
+    "title": "Approval submitted for a different intent",
+    "takeaway": "Consent is bound to the intent hash. An approval that names a different intent is refused, so a swapped consent screen cannot launder an approval.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} pushes the request for {{currency}} {{amount}}." },
+      { "op": "authorize", "say": "The server resolves it and opens a consent transaction." },
+      { "op": "consent", "tamper": { "amount": "{{amount_tampered}}" }, "expect": { "status": 400, "reason": "consent_intent_mismatch" }, "say": "The approval that comes back names the hash of a {{currency}} {{amount_tampered}} intent, not the one bound at PAR. Refused." }
+    ]
+  },
+  {
+    "id": "S05", "slug": "resource-swapped-at-token", "kind": "attack", "outcome": "blocked",
+    "title": "Resource swapped at the token request",
+    "takeaway": "A token request may not change the bound intent. The server compares it with what was pushed and approved.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} pushes the request for the approved target." },
+      { "op": "authorize" },
+      { "op": "consent", "say": "{{user}} approves." },
+      { "op": "token", "intent": { "resource": "{{resource_swapped}}" }, "expect": { "status": 400, "reason": "intent_mismatch" }, "say": "At the token endpoint the client asks for a different resource. The server sees a different intent than the one approved and refuses." }
+    ]
+  },
+  {
+    "id": "S06", "slug": "resource-swapped-at-execute", "kind": "attack", "outcome": "blocked",
+    "title": "Valid token, different target",
+    "takeaway": "A genuine token is still only good for its own intent. The resource server compares what is attempted with the bound intent.",
+    "steps": [
+      { "op": "par" }, { "op": "authorize" }, { "op": "consent" }, { "op": "token", "say": "A real token is issued for the approved intent." },
+      { "op": "execute", "request": { "resource": "{{resource_swapped}}" }, "expect": { "status": 403, "reason": "intent_mismatch" }, "say": "The agent aims the token at {{resource_swapped}}. The resource server refuses: the bound resource is different." }
+    ]
+  },
+  {
+    "id": "S07", "slug": "amount-raised-at-execute", "kind": "attack", "outcome": "blocked",
+    "title": "Valid token, bigger amount",
+    "takeaway": "The approved amount is a ceiling that is also a floor: the action must equal the intent, not merely stay under a scope.",
+    "steps": [
+      { "op": "par" }, { "op": "authorize" }, { "op": "consent" }, { "op": "token" },
+      { "op": "execute", "request": { "amount": "{{amount_tampered}}" }, "expect": { "status": 403, "reason": "intent_mismatch" }, "say": "The agent asks to move {{currency}} {{amount_tampered}} with a token approved for {{currency}} {{amount}}. Refused." },
+      { "op": "execute", "request": { "action": "{{action_other}}" }, "expect": { "status": 403, "reason": "intent_mismatch" }, "say": "A different action ({{action_other}}) with the same token. Also refused." }
+    ]
+  },
+  {
+    "id": "S08", "slug": "replayed-request-uri", "kind": "attack", "outcome": "blocked",
+    "title": "request_uri replayed",
+    "takeaway": "A request_uri is one-time. Whoever sees it in a log or history cannot use it again.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} pushes the request." },
+      { "op": "authorize", "say": "First use: resolved and burned." },
+      { "op": "authorize", "expect": { "status": 400, "reason": "request_uri_reused" }, "say": "A second open of the same request_uri is refused." }
+    ]
+  },
+  {
+    "id": "S09", "slug": "expired-request-uri", "kind": "attack", "outcome": "blocked",
+    "title": "request_uri used after it expired",
+    "takeaway": "A pushed request lives for 60 seconds. A stale link is useless.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} pushes the request. expires_in is 60." },
+      { "op": "wait", "seconds": 61, "say": "The mock clock moves forward 61 seconds. Nobody opened the link." },
+      { "op": "authorize", "expect": { "status": 400, "reason": "request_uri_expired" }, "say": "The authorization server refuses the expired request_uri." }
+    ]
+  },
+  {
+    "id": "S10", "slug": "wrong-client", "kind": "attack", "outcome": "blocked",
+    "title": "request_uri presented by another client",
+    "takeaway": "A request_uri belongs to the client that pushed it.",
+    "steps": [
+      { "op": "par", "say": "{{agent}} (agent-app) pushes the request." },
+      { "op": "authorize", "client": "partner-app", "expect": { "status": 400, "reason": "client_mismatch" }, "say": "A different client, partner-app, presents that request_uri. Refused, and the request_uri is not burned." }
+    ]
+  },
+  {
+    "id": "S11", "slug": "missing-intent", "kind": "attack", "outcome": "blocked",
+    "title": "Pushed request with no intent",
+    "takeaway": "This server will not issue authorization without knowing what it is for.",
+    "steps": [
+      { "op": "par", "intent": null, "expect": { "status": 400, "reason": "intent_required" }, "say": "{{agent}} pushes a request with no intent. A bare scope would be a blank cheque, so the server refuses." }
+    ]
+  },
+  {
+    "id": "S12", "slug": "inline-params-rejected", "kind": "attack", "outcome": "blocked",
+    "title": "Inline parameters when PAR is required",
+    "takeaway": "When a client is set to require PAR, an authorize request with inline parameters is refused outright. That is what makes PAR enforceable.",
+    "steps": [
+      { "op": "authorize", "mode": "inline", "expect": { "status": 400, "reason": "par_required" }, "say": "The client skips PAR and sends the intent as plain query parameters. The server was told this client must push, so it refuses." }
+    ]
+  },
+  {
+    "id": "S13", "slug": "legacy-inline-attack-succeeds", "kind": "contrast", "outcome": "attack-succeeds",
+    "title": "Contrast: no PAR, the link can be edited",
+    "takeaway": "Without PAR the intent rides in the browser, where it can be changed. The server binds whatever arrives, so the token faithfully carries the edited intent.",
+    "steps": [
+      { "op": "authorize", "mode": "inline", "client": "legacy-web", "intent": { "amount": "{{amount_tampered}}" }, "say": "A legacy client is not required to use PAR. A link was edited in transit to ask for {{currency}} {{amount_tampered}} instead of {{currency}} {{amount}}." },
+      { "op": "consent", "say": "The consent screen shows what arrived. If {{user}} does not read it, it is approved." },
+      { "op": "token", "client": "legacy-web" },
+      { "op": "execute", "request": { "amount": "{{amount_tampered}}" }, "say": "The tampered action runs. PAR would have prevented this: the browser would not have carried the amount at all." }
+    ]
+  },
+  {
+    "id": "S14", "slug": "token-claims-forged", "kind": "attack", "outcome": "blocked",
+    "title": "Token edited to raise the amount",
+    "takeaway": "The intent claim is signed. Editing it breaks the signature.",
+    "steps": [
+      { "op": "par" }, { "op": "authorize" }, { "op": "consent" }, { "op": "token", "say": "A genuine token is issued for the approved intent." },
+      { "op": "execute", "forge": { "intent": { "amount": "{{amount_tampered}}" } }, "request": { "amount": "{{amount_tampered}}" }, "expect": { "status": 401, "reason": "bad_signature" }, "say": "The payload is edited to {{currency}} {{amount_tampered}} and the old signature kept. The resource server verifies the signature and refuses it." }
+    ]
+  },
+  {
+    "id": "S15", "slug": "unknown-param-at-par", "kind": "attack", "outcome": "blocked",
+    "title": "Unregistered parameter in the push",
+    "takeaway": "This server is strict: parameters it does not know are refused rather than silently ignored.",
+    "steps": [
+      { "op": "par", "set": { "admin_override": "true" }, "expect": { "status": 400, "reason": "unknown_param" }, "say": "{{agent}} sneaks an extra parameter into the push. It is not part of the registered set, so the server refuses the whole request." }
+    ]
+  }
+]

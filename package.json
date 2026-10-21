@@ -1,0 +1,18 @@
+{
+  "name": "intent-par-inspector",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Intent / PAR inspector: push an authorization request to a mock authorization server (RFC 9126), see the intent bound into the request_uri, the consent and the token, and watch tampering, replay and expiry get refused. Mock only, no tenant, no outbound network.",
+  "license": "MIT",
+  "workspaces": ["server", "web"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "npm start -w server",
+    "test": "npm test -w server && node --test scripts/*.test.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "content-pack": "node scripts/validate-content-pack.mjs",
+    "prepare": "git config core.hooksPath .githooks || true"
+  },
+  "devDependencies": { "ajv": "^8.20.0" }
+}

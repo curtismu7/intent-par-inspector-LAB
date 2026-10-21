@@ -1,0 +1,23 @@
+[
+  {
+    "id": "travel",
+    "name": "Travel",
+    "cast": { "user": "Mark", "agent": "Travel Agent", "merchant": "Skyline Air", "item": "plane ticket from SEA to JFK" },
+    "intent": { "action": "travel.book_flight", "amount": 412, "currency": "USD", "resource": "https://airline.example.invalid/flights/SK-204", "description": "Book {{item}} on {{merchant}} for {{currency}} {{amount}}" },
+    "alt": { "resource": "https://airline.example.invalid/flights/SK-901", "action": "travel.cancel_booking" }
+  },
+  {
+    "id": "banking",
+    "name": "Banking",
+    "cast": { "user": "Alice", "agent": "Payments Agent", "merchant": "Northwind Utilities", "item": "electricity bill" },
+    "intent": { "action": "payments.transfer", "amount": 80, "currency": "USD", "resource": "https://bank.example.invalid/accounts/chk-001", "description": "Pay {{merchant}} {{currency}} {{amount}} for the {{item}}" },
+    "alt": { "resource": "https://bank.example.invalid/accounts/sav-002", "action": "payments.transfer_all" }
+  },
+  {
+    "id": "retail",
+    "name": "Retail",
+    "cast": { "user": "Priya", "agent": "Shopping Agent", "merchant": "Harbor Outfitters", "item": "trail jacket" },
+    "intent": { "action": "retail.place_order", "amount": 129, "currency": "USD", "resource": "https://shop.example.invalid/orders/cart-7", "description": "Order the {{item}} from {{merchant}} for {{currency}} {{amount}}" },
+    "alt": { "resource": "https://shop.example.invalid/orders/cart-9", "action": "retail.refund_order" }
+  }
+]
