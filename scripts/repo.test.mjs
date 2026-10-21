@@ -46,11 +46,12 @@ test('shelf entry matches the demo: id, port, health path, loopback url', () => 
 });
 
 test('README is true: default port, commands exist, endpoints are real', () => {
+  for (const f of ['scripts/run.sh', 'scripts/reset.mjs', 'docs/talk-track.md', 'docs/live-checks.md', 'docker-compose.yml', 'Dockerfile']) assert.ok(read('README.md').includes(f.replace(/^docs\//, 'docs/')), f);
   const readme = read('README.md');
   const pkg = JSON.parse(read('package.json'));
   for (const s of ['doctor', 'start', 'test']) assert.ok(pkg.scripts[s], s);
   assert.match(readme, /localhost:4771/);
-  assert.match(readme, /step IP1, the web UI/i);
+  assert.match(readme, /step IP2, integration/i);
   for (const route of ['/api/builder']) assert.ok(readme.includes(route), route);
   for (const route of ['/as/par', '/as/authorize', '/as/consent', '/as/token', '/rs/execute', '/as/jwks', '/api/run-all']) assert.ok(readme.includes(route), route);
   const ports = [...new Set([...readme.matchAll(/localhost:(\d{4,5})/g)].map((m) => Number(m[1])))];
@@ -61,7 +62,7 @@ test('no tracked file (tests excepted: they name bad hosts as negative cases) na
   const offenders = [];
   for (const f of trackedTextFiles()) {
     if (/\.(png|jpg|ico)$/.test(f) || /^server\/test\//.test(f) || f === 'scripts/repo.test.mjs') continue; // tests name real-looking hosts on purpose, as negative cases
-    const hosts = scanHosts(read(f)).filter((h) => /^[a-z0-9.-]+$/.test(h) && !/^(www\.)?(rfc-editor\.org|datatracker\.ietf\.org|json-schema\.org)$/.test(h));
+    const hosts = scanHosts(read(f)).filter((h) => /^[a-z0-9.-]+$/.test(h) && h !== '0.0.0.0' && !/^(www\.)?(rfc-editor\.org|datatracker\.ietf\.org|json-schema\.org)$/.test(h));
     if (hosts.length) offenders.push(`${f}: ${hosts.join(', ')}`);
   }
   assert.deepEqual(offenders, []);
@@ -104,4 +105,39 @@ test('commits carry the co-author trailer (checked on existing history)', (t) =>
   if (!log.trim()) return t.skip('no commits yet');
   const msgs = execFileSync('git', ['log', '--format=%H'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
   for (const h of msgs) assert.match(execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' }), /Co-Authored-By: Claude Sonnet 5\.5 <noreply@anthropic\.com>/, h);
+});
+
+test('content pack also validates against the kit schema when it is on this machine', (t) => {
+  const candidates = [path.join(os.homedir(), 'Development/learning-hub/server/schema/content-pack.schema.json'), path.join(os.homedir(), 'Development/AI-DEMO2/planning/standalone-research/content-pack/content-pack.schema.json')];
+  const found = candidates.find((c) => fs.existsSync(c));
+  if (!found) return t.skip('kit schema not present on this machine');
+  assert.deepEqual(validatePack(JSON.parse(read('content-pack.json')), JSON.parse(fs.readFileSync(found, 'utf8'))), []);
+});
+
+test('shelf entry points at this repo compose file', () => {
+  const [d] = JSON.parse(read('docs/shelf-entry.json')).demos;
+  assert.ok(path.isAbsolute(d.composeFile) && d.composeFile.endsWith('/docker-compose.yml'));
+  assert.equal(d.composeFile, path.join(ROOT, 'docker-compose.yml'), 'update docs/shelf-entry.json if the repo moved');
+});
+
+test('CI workflow: self-hosted default, Node 22 on PRs, gitleaks and the forbidden-strings gate', () => {
+  const ci = read('.github/workflows/ci.yml');
+  assert.match(ci, /pull_request/);
+  assert.match(ci, /self-hosted/);
+  assert.match(ci, /\[22\]/);
+  assert.match(ci, /gitleaks detect/);
+  assert.match(ci, /demo-kit\/forbidden-strings\.txt/);
+  assert.match(ci, /grep -cF -f/);
+  assert.doesNotMatch(ci, /ubuntu-latest[^\n]*\n(?!.*vars\.RUNS_ON)/);
+});
+
+test('dockerignore keeps secrets and modules out of the image build context', () => {
+  const di = read('.dockerignore');
+  for (const x of ['**/node_modules', '.env', '.git']) assert.ok(di.split('\n').includes(x), x);
+});
+
+test('reset script refuses a non-loopback host and the reset endpoint exists', async () => {
+  const { reset } = await import('./reset.mjs');
+  await assert.rejects(() => reset('http://as.example.invalid:4771'), /loopback only/);
+  assert.match(read('server/src/app.js'), /api\.post\('\/reset'/);
 });

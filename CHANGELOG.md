@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0 (IP2, integration)
+- Dockerfile + docker-compose.yml (OrbStack): published on 127.0.0.1 only, pinned by `scripts/compose.test.mjs`; read-only, no capabilities, demo-health/1 healthcheck.
+- netguard allows a wildcard bind lookup (the container listens on 0.0.0.0 inside) while connecting to it stays refused; test added.
+- `scripts/run.sh` one-command host run; Reset: `POST /api/reset`, header button, `scripts/reset.mjs`.
+- Shelf entry with the compose path; content pack also validated against the Learning Hub kit schema when present.
+- `.github/workflows/ci.yml` (self-hosted, Node 22 on PRs, gitleaks, forbidden-strings gate); `docs/live-checks.md`; `docs/talk-track.md`.
+
 ## 0.2.0 (IP1, web UI)
 - React + Vite SPA: shared shell with Request, Server, Token, Diagram and Raw tabs, persona picker, presenter mode, dark/light/system theme, mobile width.
 - Hand-driven flow against the live mock AS: request builder, push, request_uri panel, consent screen with the exact bound intent, token panel (raw mock token, decoded claims, intent claims marked), execute with tamper options.

@@ -14,6 +14,7 @@ export async function postJson(path, body = {}) {
 }
 export const getCatalog = (vertical) => getJson(`/api/catalog${vertical ? `?vertical=${encodeURIComponent(vertical)}` : ""}`);
 export const getBuilder = (client) => getJson(`/api/builder?client=${encodeURIComponent(client)}`);
+export const resetServer = () => postJson("/api/reset");
 export const runScenario = (scenario, vertical) => postJson("/api/run", { scenario, vertical });
 
 const REASON = { 200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found" };

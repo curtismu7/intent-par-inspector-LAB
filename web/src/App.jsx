@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCatalog, runScenario } from "./lib/api.js";
+import { getCatalog, resetServer, runScenario } from "./lib/api.js";
 import { fromRun } from "./lib/session.js";
 import { useWorkbench } from "./lib/useWorkbench.js";
 import { fill } from "./lib/fill.js";
@@ -70,6 +70,12 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
 
   const resetAll = useCallback(() => { setRun(null); setActive("manual"); setCursor(-1); setBoxes(START_BOXES); wb.reset(); }, [wb]);
 
+  const [resetNote, setResetNote] = useState("");
+  const resetServerState = useCallback(async () => {
+    try { await resetServer(); resetAll(); setResetNote("Mock server reset: pushed requests, codes and spent tokens are gone."); }
+    catch (e) { setResetNote(`Reset failed: ${e.message}`); }
+  }, [resetAll]);
+
   const cycle = () => { const next = { system: "light", light: "dark", dark: "system" }[theme]; setTheme(next); write("ipi.theme", next); };
   const togglePresent = () => { write("ipi.present", present ? "0" : "1"); setPresent(!present); };
   const go = (id) => { window.location.hash = `#/${id}`; };
@@ -98,10 +104,12 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
               {catalog.verticals.map((v) => <option key={v.id} value={v.id}>{v.name}: {v.cast.user} and {v.cast.agent}</option>)}
             </select>
           </label>
+          <button type="button" className="btn" onClick={resetServerState}>Reset server</button>
           <button type="button" className="btn" aria-pressed={present} onClick={togglePresent}>Present</button>
           <button type="button" className="btn" onClick={cycle} title="Theme: system, light, dark">Theme: {theme}</button>
         </div>
       </header>
+      <p className="muted" role="status" data-testid="reset-note">{resetNote}</p>
       <div className="tabbar" role="tablist" aria-label="Inspector sections" onKeyDown={onTabKey}>
         {TABS.map(([id, label]) => (
           <button key={id} id={`tab-${id}`} ref={(el) => { tabRefs.current[id] = el; }} type="button" role="tab" aria-selected={id === tab} aria-controls="main" tabIndex={id === tab ? 0 : -1} className="tab" onClick={() => go(id)}>{label}</button>

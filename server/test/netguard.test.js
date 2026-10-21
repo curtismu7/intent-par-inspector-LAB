@@ -48,3 +48,15 @@ test('raw IP-literal sockets are refused and recorded as socket:<ip>', async () 
   assert.deepEqual(g.attempts.filter((a) => a.startsWith('socket:')), ['socket:192.0.2.1', 'socket:192.0.2.2', 'socket:192.0.2.3']);
   g.restore();
 });
+
+test('a wildcard bind (container INTENT_BIND=0.0.0.0) can listen, but connecting to it is still refused', async () => {
+  const g = installNetguard();
+  const srv = net.createServer((c) => c.end());
+  await new Promise((res, rej) => { srv.once('error', rej); srv.listen(0, '0.0.0.0', res); });
+  const { port } = srv.address();
+  assert.deepEqual(g.attempts, [], 'listening is not an outbound attempt');
+  await assert.rejects(new Promise((res, rej) => { try { const s = net.connect({ host: '0.0.0.0', port }); s.on('error', rej); s.on('connect', res); } catch (e) { rej(e); } }), /network blocked/);
+  assert.ok(g.attempts.includes('socket:0.0.0.0'));
+  await new Promise((r) => srv.close(r));
+  g.restore();
+});

@@ -148,3 +148,18 @@ test('builder: fresh PKCE pair and mock client credentials; the pair is valid at
     assert.equal(par.status, 201);
   });
 });
+
+test('POST /api/reset forgets pushed request_uris and spent state; cross-origin reset is refused', async () => {
+  const { parBody } = await import('./helpers.js');
+  await withServer(async (base) => {
+    const post = (path, body, headers = {}) => fetch(base + path, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
+    const par = await (await post('/as/par', parBody())).json();
+    assert.match(par.request_uri, /^urn:/);
+    const evil = await post('/api/reset', {}, { origin: 'https://evil.example.invalid' });
+    assert.ok(evil.status >= 400, 'cross-origin reset refused');
+    const ok = await post('/api/reset', {});
+    assert.equal(ok.status, 200);
+    const authz = await fetch(`${base}/as/authorize?client_id=agent-app&request_uri=${encodeURIComponent(par.request_uri)}`);
+    assert.ok(authz.status >= 400, 'request_uri pushed before the reset is gone');
+  });
+});

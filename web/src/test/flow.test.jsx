@@ -144,6 +144,18 @@ describe("full hand-driven flow", () => {
   });
 });
 
+describe("reset", () => {
+  it("Reset server clears the scenario on screen and says so", async () => {
+    const user = await open();
+    await tab(user, "Server");
+    await user.click(screen.getByRole("button", { name: "Run" }));
+    await waitFor(() => expect(screen.getByTestId("verdict")).toBeInTheDocument());
+    await user.click(screen.getByRole("button", { name: "Reset server" }));
+    await waitFor(() => expect(screen.getByTestId("reset-note")).toHaveTextContent(/Mock server reset/));
+    expect(screen.queryByTestId("verdict")).toBeNull();
+  });
+});
+
 describe("scenarios and story player", () => {
   it("runs a tamper scenario, shows the verdict and a story with the persona filled in", async () => {
     const user = await open();

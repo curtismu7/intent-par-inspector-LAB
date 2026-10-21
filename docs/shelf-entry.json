@@ -8,9 +8,9 @@
       "description": "Push an authorization request to a mock server (RFC 9126), watch the intent get bound into the request_uri, consent and token, and see tampering, replay and expiry refused.",
       "url": "http://localhost:4771",
       "healthPath": "/api/health",
-      "composeFile": "",
+      "composeFile": "/Users/cmuir/Development/intent-par-inspector/docker-compose.yml",
       "composeOverlays": [],
-      "notes": "Host-run: npm start (port 4771). Mock only: no tenant, no credentials. Docker publish arrives with the integration step; composeFile stays empty until then."
+      "notes": "Host-run: ./scripts/run.sh (port 4771). Docker: docker compose up --build -d (published on 127.0.0.1:4771 only). Mock only: no tenant, no credentials. composeFile is an absolute path on this machine; change it if the repo lives elsewhere."
     }
   ]
 }

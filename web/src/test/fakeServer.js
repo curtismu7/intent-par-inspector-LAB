@@ -29,6 +29,7 @@ export function installFakeServer() {
       const id = u.searchParams.get("client") || "agent-app"; const c = CLIENTS[id]; const verifier = randomBytes(32).toString("base64url");
       return json({ client_id: id, client_secret: c.secret, redirect_uri: c.redirect_uris[0], code_verifier: verifier, code_challenge: pkceChallenge(verifier), code_challenge_method: "S256", mock: true });
     }
+    if (u.pathname === "/api/reset") return json({ ok: true });
     if (u.pathname === "/api/run") return json(runScenario(body.scenario, body.vertical));
     const out = as.handle({ method, path: u.pathname, query: Object.fromEntries(u.searchParams), headers: init.headers || {}, body });
     return json(out.body, out.status, out.headers);

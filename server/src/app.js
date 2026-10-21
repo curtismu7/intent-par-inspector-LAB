@@ -15,7 +15,8 @@ const WEB_DIST = process.env.WEB_DIST || path.resolve(path.dirname(fileURLToPath
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const bad = (res, message, status = 400) => res.status(status).json({ error: status === 404 ? 'not_found' : 'bad_request', message });
 
-export function createApp({ health = createHealth(), as = createMockAS() } = {}) {
+export function createApp({ health = createHealth(), as: initialAs = createMockAS() } = {}) {
+  let as = initialAs; // POST /api/reset swaps in a fresh one
   const app = express();
   app.disable('x-powered-by');
   app.use(hostCheck);
@@ -56,6 +57,8 @@ export function createApp({ health = createHealth(), as = createMockAS() } = {})
     const results = runAll(vertical);
     res.json({ vertical, total: results.length, passed: results.filter((r) => r.pass).length, results });
   });
+  // Reset: forget every pushed request, code and spent token, and mint a new throwaway key. Same-origin writes only (middleware above).
+  api.post('/reset', (_req, res) => { as = createMockAS(); res.json({ ok: true, reset: 'mock authorization server state cleared' }); });
   api.get('/safety-scan', (_req, res) => {
     const offenders = storyCorpus().map(({ where, text }) => ({ where, hosts: scanHosts(text) })).filter((x) => x.hosts.length);
     res.json({ ok: offenders.length === 0, offenders });
