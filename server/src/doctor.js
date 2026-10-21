@@ -23,7 +23,7 @@ export async function runChecks({ env = process.env } = {}) {
   add('story-hosts', bad.length ? 'fail' : 'pass', bad.length ? `non-reserved hosts: ${bad.map((b) => `${b.where}: ${b.hosts.join(', ')}`).join('; ')}` : 'every host in every story is .invalid, .example or loopback');
 
   const ng = await netguardSelfTest();
-  add('netguard', ng.ok ? 'pass' : 'fail', ng.ok ? `blocked fetch, socket, dns and udp to a non-loopback host (${ng.blocked}/4)` : ng.detail);
+  add('netguard', ng.ok ? 'pass' : 'fail', ng.ok ? `blocked fetch, socket, socket-by-IP, dns lookup, dns resolve and udp to a non-loopback host (${ng.blocked}/6)` : ng.detail);
 
   try {
     const results = VERTICALS.flatMap((v) => runAll(v.id));

@@ -79,7 +79,7 @@ export function createApp({ health = createHealth(), as: initialAs = createMockA
     const out = as.handle({ method: req.method, path: req.path, query: req.query, headers: req.headers, body: req.body || {} });
     res.status(out.status).set(out.headers).json(out.body);
   });
-  mock.use((err, _req, res, _next) => res.status(err.status || 400).json({ error: 'invalid_request', reason: 'unparseable_body', error_description: 'request body could not be parsed' }));
+  mock.use((err, _req, res, _next) => (!(err.status >= 400 && err.status < 500) ? res.status(500).json({ error: 'server_error', reason: 'internal', error_description: 'the mock server hit an unexpected error' }) : res.status(err.status).json({ error: 'invalid_request', reason: 'unparseable_body', error_description: 'request body could not be parsed' })));
   app.use(mock);
 
   if (fs.existsSync(path.join(WEB_DIST, 'index.html'))) {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createMockAS, CLIENTS, PAR_TTL_S, ISSUER } from '../src/as.js';
-import { verifyJwt, decodeJwt, forgePayload } from '../src/jwt.js';
+import { verifyJwt, decodeJwt, forgePayload, signJwt } from '../src/jwt.js';
 import { intentHash } from '../src/intent.js';
 import { INTENT, VERIFIER, parBody, flow, clock } from './helpers.js';
 
@@ -169,4 +169,26 @@ test('jwks publishes the throwaway public key only', () => {
 
 test('unknown endpoint is 404', () => {
   assert.equal(H(mk().as, 'GET', '/nope').status, 404);
+});
+
+test('client lookup ignores inherited keys: constructor/toString/__proto__ are unknown clients, not TypeErrors', () => {
+  const { as } = mk();
+  for (const id of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) {
+    const r = H(as, 'POST', '/as/par', { body: parBody({ client_id: id, client_secret: 'undefined' }) });
+    assert.equal(r.status, 401, id); assert.equal(r.body.error, 'invalid_client', id);
+    const a = H(as, 'GET', '/as/authorize', { query: { client_id: id } });
+    assert.equal(a.status, 400, id); assert.equal(a.body.reason, 'client_unknown', id);
+  }
+});
+
+test('resource server: a validly signed token with the wrong issuer, audience or no mock marker is refused', () => {
+  const { as } = mk();
+  const { token } = flow(as);
+  const good = decodeJwt(token.body.access_token).payload;
+  const exec = (p) => H(as, 'POST', '/rs/execute', { headers: { authorization: `Bearer ${signJwt(p, as.keys)}` }, body: { ...INTENT } });
+  assert.equal(exec(good).status, 200, 'control: re-signed good payload is accepted');
+  for (const [label, p] of [['iss', { ...good, iss: 'https://other.example.invalid', jti: 'a' }], ['aud', { ...good, aud: 'https://other.example.invalid', jti: 'b' }], ['mock', { ...good, mock: false, jti: 'c' }]]) {
+    const r = exec(p);
+    assert.equal(r.status, 401, label); assert.equal(r.body.reason, 'wrong_issuer_or_audience', label);
+  }
 });

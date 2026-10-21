@@ -43,7 +43,7 @@ export function createMockAS({ now = () => Date.now(), keys = createKeys(), rand
     let id = body.client_id; let secret = body.client_secret;
     const basic = /^Basic (.+)$/i.exec(headers.authorization || '');
     if (basic) { const [i, ...s] = Buffer.from(basic[1], 'base64').toString().split(':'); id = id || i; secret = s.join(':'); }
-    const client = clients[id];
+    const client = Object.hasOwn(clients, id) ? clients[id] : undefined;
     if (!client || secret === undefined || !safeEq(secret, client.secret)) return { error: fail(401, 'invalid_client', 'client_auth_failed', 'client authentication failed') };
     return { id, client };
   }
@@ -85,7 +85,7 @@ export function createMockAS({ now = () => Date.now(), keys = createKeys(), rand
   function startTxn({ client_id, redirect_uri, scope, state, code_challenge, login_hint, intent, hash, binding }) {
     const txn = `txn_${rand(12)}`;
     txns.set(txn, { client_id, redirect_uri, scope, state, code_challenge, login_hint, intent, hash, binding, exp: sec() + TXN_TTL_S, done: false });
-    const client = clients[client_id];
+    const client = Object.hasOwn(clients, client_id) ? clients[client_id] : undefined;
     return res(200, {
       consent_required: true, txn, client: client.name, binding, intent, intent_hash: hash, expires_in: TXN_TTL_S,
       note: binding === 'par' ? 'Intent came from the pushed request: the browser could not edit it.' : 'Intent came from browser query parameters: anyone holding the link could have edited it.',
@@ -94,7 +94,7 @@ export function createMockAS({ now = () => Date.now(), keys = createKeys(), rand
 
   // GET /as/authorize
   function authorize({ query }) {
-    const client = clients[query.client_id];
+    const client = Object.hasOwn(clients, query.client_id) ? clients[query.client_id] : undefined;
     if (!client) return fail(400, 'invalid_request', 'client_unknown', 'client_id is missing or unknown');
     const hasUri = query.request_uri !== undefined;
     if (!hasUri) {

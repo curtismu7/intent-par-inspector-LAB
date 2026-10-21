@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1 (final fix pass)
+- `npm test` is clone-location independent: the shelf-entry test pins the repo-relative tail instead of this machine's absolute path (verified from a fresh clone).
+- netguard now also refuses dns.resolve*, dns.promises.lookup/resolve* and Resolver instances; the UDP guard finds the address by argument position; self-test counts 6 routes and doctor labels them (6/6).
+- Mock AS client lookup ignores inherited keys (`constructor`, `__proto__`): 401 invalid_client; unexpected errors are a 500, not a fake 400.
+- Request tab "Next" button moves focus to the main region.
+- Tests: netguard suite fails fast (fetch timeout, listeners always closed) when a guard is loosened; forged-but-signed wrong iss/aud/mock token; Reset restores box positions.
+
 ## 0.3.0 (IP2, integration)
 - Dockerfile + docker-compose.yml (OrbStack): published on 127.0.0.1 only, pinned by `scripts/compose.test.mjs`; read-only, no capabilities, demo-health/1 healthcheck.
 - netguard allows a wildcard bind lookup (the container listens on 0.0.0.0 inside) while connecting to it stays refused; test added.

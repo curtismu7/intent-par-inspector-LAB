@@ -201,3 +201,14 @@ describe("raw tab", () => {
     expect(screen.getByTestId("raw-response")).toHaveTextContent("HTTP/1.1 201 Created");
   });
 });
+
+describe("keyboard focus", () => {
+  it("activating the Next button on the Request tab moves focus to the main region, not to BODY", async () => {
+    const user = await open();
+    await user.click(screen.getByRole("button", { name: "Push to mock AS" }));
+    await screen.findByTestId("push-ok");
+    await user.click(screen.getByRole("button", { name: /Next: open \/authorize/ }));
+    await waitFor(() => expect(window.location.hash).toBe("#/server"));
+    expect(document.activeElement).toBe(document.getElementById("main"));
+  });
+});

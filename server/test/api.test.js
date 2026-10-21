@@ -163,3 +163,11 @@ test('POST /api/reset forgets pushed request_uris and spent state; cross-origin 
     assert.ok(authz.status >= 400, 'request_uri pushed before the reset is gone');
   });
 });
+
+test('POST /as/par with an inherited-key client_id is 401 invalid_client, not a misleading 400', async () => {
+  await withServer(async (base) => {
+    const r = await fetch(`${base}/as/par`, { method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded', origin: base }, body: 'client_id=constructor&client_secret=undefined&response_type=code' });
+    assert.equal(r.status, 401);
+    assert.equal((await r.json()).error, 'invalid_client');
+  });
+});

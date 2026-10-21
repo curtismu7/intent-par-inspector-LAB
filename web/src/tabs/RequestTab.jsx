@@ -67,7 +67,7 @@ export default function RequestTab({ app }) {
       </div>
       <div className="actions">
         <button type="button" className="btn primary" onClick={wb.push} disabled={wb.busy}>Push to mock AS</button>
-        {pushed?.response.status === 201 && <button type="button" className="btn" onClick={() => go("server")}>Next: open /authorize on the Server tab</button>}
+        {pushed?.response.status === 201 && <button type="button" className="btn" onClick={() => { go("server"); document.getElementById("main")?.focus(); }}>Next: open /authorize on the Server tab</button>}
       </div>
       {wb.error && <p className="alert" role="alert">{wb.error}</p>}
       <section className="card" aria-labelledby="ru-h">
