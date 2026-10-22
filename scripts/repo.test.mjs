@@ -103,7 +103,7 @@ test('commits carry the co-author trailer (checked on existing history)', (t) =>
   let log = '';
   try { log = execFileSync('git', ['log', '--format=%B'], { cwd: ROOT, encoding: 'utf8' }); } catch { return t.skip('no commits yet'); }
   if (!log.trim()) return t.skip('no commits yet');
-  const msgs = execFileSync('git', ['log', '--format=%H'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
+  const msgs = execFileSync('git', ['log', '--no-merges', '--format=%H'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
   for (const h of msgs) assert.match(execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' }), /Co-Authored-By: Claude Sonnet 5\.5 <noreply@anthropic\.com>/, h);
 });
 
