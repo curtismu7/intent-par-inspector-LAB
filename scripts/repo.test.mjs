@@ -104,7 +104,12 @@ test('commits carry the co-author trailer (checked on existing history)', (t) =>
   try { log = execFileSync('git', ['log', '--format=%B'], { cwd: ROOT, encoding: 'utf8' }); } catch { return t.skip('no commits yet'); }
   if (!log.trim()) return t.skip('no commits yet');
   const msgs = execFileSync('git', ['log', '--no-merges', '--format=%H'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
-  for (const h of msgs) assert.match(execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' }), /Co-Authored-By: Claude Sonnet 5\.5 <noreply@anthropic\.com>/, h);
+  for (const h of msgs) {
+    const msg = execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' });
+    // A shallow PR checkout makes GitHub's synthetic merge commit look parentless, so --no-merges misses it.
+    if (/^Merge [0-9a-f]{40} into [0-9a-f]{40}\s*$/.test(msg)) continue;
+    assert.match(msg, /Co-Authored-By: Claude Sonnet 5\.5 <noreply@anthropic\.com>/, h);
+  }
 });
 
 test('content pack also validates against the kit schema when it is on this machine', (t) => {
