@@ -16,7 +16,7 @@ Then it shows what is refused: edited amount, swapped resource, replayed or expi
 
 ## Run it
 
-Needs Node 20 or later.
+Needs Node 26 or later.
 
 ```
 npm install
@@ -61,7 +61,7 @@ The **Reset server** button in the header, or `node scripts/reset.mjs [base-url]
 - `docs/live-checks.md`: optional owner-only comparison with a real PingOne or PingFederate PAR endpoint (instructions only, nothing here runs it).
 - `content-pack.json`: Learning Hub content, validated by `npm run content-pack` against `docs/content-pack.schema.json` and, when present, the kit schema in `~/Development/learning-hub`.
 - `docs/shelf-entry.json`: the demo-shelf registry entry (compose file path is machine specific: see the note in the file).
-- CI: `.github/workflows/ci.yml` (self-hosted runner, Node 22 on pull requests, gitleaks, forbidden-strings gate).
+- CI: `.github/workflows/ci.yml` (GitHub-hosted runner, Node 26, gitleaks, forbidden-strings gate).
 
 ## Stories
 
