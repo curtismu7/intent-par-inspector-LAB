@@ -61,8 +61,8 @@ test('README is true: default port, commands exist, endpoints are real', () => {
 test('no tracked file (tests excepted: they name bad hosts as negative cases) names a non-reserved host', () => {
   const offenders = [];
   for (const f of trackedTextFiles()) {
-    if (/\.(png|jpg|ico)$/.test(f) || /^server\/test\//.test(f) || f === 'scripts/repo.test.mjs') continue; // tests name real-looking hosts on purpose, as negative cases
-    const hosts = scanHosts(read(f)).filter((h) => /^[a-z0-9.-]+$/.test(h) && h !== '0.0.0.0' && !/^(www\.)?(rfc-editor\.org|datatracker\.ietf\.org|json-schema\.org)$/.test(h));
+    if (/\.(png|jpg|ico)$/.test(f) || /^server\/test\//.test(f) || f === 'scripts/repo.test.mjs' || f === 'scripts/check-forbidden-strings.test.mjs') continue; // tests name real-looking hosts on purpose, as negative cases
+    const hosts = scanHosts(read(f)).filter((h) => /^[a-z0-9.-]+$/.test(h) && h !== '0.0.0.0' && !/^(www\.)?(rfc-editor\.org|datatracker\.ietf\.org|json-schema\.org|github\.com)$/.test(h));
     if (hosts.length) offenders.push(`${f}: ${hosts.join(', ')}`);
   }
   assert.deepEqual(offenders, []);
@@ -127,15 +127,15 @@ test('shelf entry points at this repo compose file', () => {
   assert.ok(fs.existsSync(path.join(ROOT, 'docker-compose.yml')));
 });
 
-test('CI workflow: self-hosted default, Node 22 on PRs, gitleaks and the forbidden-strings gate', () => {
+test('CI workflow: hosted runner, Node 26 only, gitleaks and the forbidden-strings gate', () => {
   const ci = read('.github/workflows/ci.yml');
   assert.match(ci, /pull_request/);
-  assert.match(ci, /self-hosted/);
-  assert.match(ci, /\[22\]/);
+  assert.match(ci, /ubuntu-latest/);
+  assert.doesNotMatch(ci.split('\n').filter((l) => /runs-on:/.test(l)).join('\n'), /self-hosted|macOS|RUNS_ON/);
+  assert.match(ci, /node: \[26\]/);
   assert.match(ci, /gitleaks detect/);
-  assert.match(ci, /demo-kit\/forbidden-strings\.txt/);
-  assert.match(ci, /grep -cF -f/);
-  assert.doesNotMatch(ci, /ubuntu-latest[^\n]*\n(?!.*vars\.RUNS_ON)/);
+  assert.match(ci, /secrets\.FORBIDDEN_STRINGS/);
+  assert.match(ci, /npm run check:forbidden/);
 });
 
 test('dockerignore keeps secrets and modules out of the image build context', () => {
