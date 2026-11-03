@@ -16,6 +16,8 @@ export const getCatalog = (vertical) => getJson(`/api/catalog${vertical ? `?vert
 export const getBuilder = (client) => getJson(`/api/builder?client=${encodeURIComponent(client)}`);
 export const resetServer = () => postJson("/api/reset");
 export const runScenario = (scenario, vertical) => postJson("/api/run", { scenario, vertical });
+export const getInfo = () => getJson("/api/info");
+export const postMode = (source) => postJson("/api/mode", { source });
 
 const REASON = { 200: "OK", 201: "Created", 400: "Bad Request", 401: "Unauthorized", 403: "Forbidden", 404: "Not Found" };
 export function rawRequest({ method, path, query, headers, bodyText }) {

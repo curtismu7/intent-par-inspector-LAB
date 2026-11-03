@@ -103,11 +103,14 @@ test('commits carry the co-author trailer (checked on existing history)', (t) =>
   let log = '';
   try { log = execFileSync('git', ['log', '--format=%B'], { cwd: ROOT, encoding: 'utf8' }); } catch { return t.skip('no commits yet'); }
   if (!log.trim()) return t.skip('no commits yet');
-  const msgs = execFileSync('git', ['log', '--no-merges', '--format=%H'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
-  for (const h of msgs) {
-    const msg = execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' });
+  const msgs = execFileSync('git', ['log', '--no-merges', '--format=%H:%P'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
+  for (const line of msgs) {
+    const [h, parents = ''] = line.split(':');
     // A shallow PR checkout makes GitHub's synthetic merge commit look parentless, so --no-merges misses it.
-    if (/^Merge [0-9a-f]{40} into [0-9a-f]{40}\s*$/.test(msg)) continue;
+    // A real merge commit has two or more parents; skip those too, wherever the checkout is deep or shallow.
+    if (parents.split(' ').filter(Boolean).length >= 2) continue;
+    if (/^Merge [0-9a-f]{40} into [0-9a-f]{40}\s*$/.test(execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' }))) continue;
+    const msg = execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' });
     assert.match(msg, /Co-Authored-By: Claude Sonnet 5\.5 <noreply@anthropic\.com>/, h);
   }
 });
