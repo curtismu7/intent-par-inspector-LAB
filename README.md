@@ -1,6 +1,8 @@
 # Intent / PAR Inspector
 
-An SE demo that shows how Pushed Authorization Requests (RFC 9126) and intent binding work, against a **mock** authorization server. No tenant, no credentials, no outbound network.
+Tier: Tester. An SE demo that shows how Pushed Authorization Requests (RFC 9126) and intent binding work, against a **mock** authorization server. No tenant, no credentials, no outbound network.
+
+Repo: https://github.com/ping-sandbox/intent-par-inspector-LAB
 
 Status: **step IP2, integration**, on top of the IP0 core and the IP1 web UI. The UI is React + Vite with five tabs (Request, Server, Token, Diagram, Raw), a hand-driven request builder, a tamper-scenario picker with a story player, a ReactFlow sequence diagram (movable boxes, Simulate, Reset, speed), a persona picker, presenter mode and dark/light themes. You can still drive everything with `curl` or the JSON API.
 

@@ -5,7 +5,7 @@ import { createECDH, createPrivateKey, createPublicKey, sign, verify, createHash
 const b64u = (b) => Buffer.from(b).toString('base64url');
 const fromB64u = (s) => Buffer.from(s, 'base64url');
 
-// The key is made with ECDH + createPrivateKey, not generateKeyPairSync('ec'): on Node 20 (20.20.2) the keygen job's GC finalizer
+// The key is made with ECDH + createPrivateKey — never with the EC crypto keygen job, which on Node 20 (20.20.2)
 // can abort the whole process (SIGABRT in uv_mutex_lock, KeyPairGenConfig destructor) when a later allocation triggers a GC.
 // The public JWK is built from the raw point, so no KeyObject export (another allocation point) is needed either.
 export function createKeys() {

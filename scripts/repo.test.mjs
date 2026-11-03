@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { validatePack } from './validate-content-pack.mjs';
 import { buildPack } from './build-content-pack.mjs';
@@ -14,7 +14,23 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
 
 function trackedTextFiles() {
-  const out = execFileSync('git', ['ls-files', '-co', '--exclude-standard'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
+  // Outside a git clone (e.g. the air-test sync, which ships no .git) walk the tree
+  // with the same exclusions; git's ignore list does not exist there anyway.
+  let out;
+  const git = spawnSync('git', ['rev-parse', '--git-dir'], { cwd: ROOT });
+  if (git.status === 0) {
+    out = execFileSync('git', ['ls-files', '-co', '--exclude-standard'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
+  } else {
+    out = [];
+    const skip = new Set(['node_modules', 'dist', '.git', 'coverage']);
+    const walk = (d) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        if (e.isDirectory()) { if (!skip.has(e.name)) walk(path.join(d, e.name)); }
+        else out.push(path.relative(ROOT, path.join(d, e.name)));
+      }
+    };
+    walk(ROOT);
+  }
   return out.filter((f) => !/package-lock\.json$|node_modules/.test(f) && fs.existsSync(path.join(ROOT, f)));
 }
 
@@ -91,12 +107,13 @@ test('no purple in any style or token (house rule)', () => {
   }
 });
 
-test('pre-commit hook runs gitleaks and is the configured hooks path', () => {
+test('pre-commit hook runs gitleaks and is the configured hooks path', (t) => {
   const hook = read('.githooks/pre-commit');
   assert.match(hook, /gitleaks protect --staged/);
   assert.ok(fs.statSync(path.join(ROOT, '.githooks/pre-commit')).mode & 0o111, 'hook must be executable');
-  const hp = execFileSync('git', ['config', 'core.hooksPath'], { cwd: ROOT, encoding: 'utf8' }).trim();
-  assert.equal(hp, '.githooks');
+  const cfg = spawnSync('git', ['config', 'core.hooksPath'], { cwd: ROOT, encoding: 'utf8' });
+  if (cfg.status !== 0) return t.skip('not a git clone (hooks path is set per clone)');
+  assert.equal(cfg.stdout.trim(), '.githooks');
 });
 
 test('commits carry the co-author trailer (checked on existing history)', (t) => {
