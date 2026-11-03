@@ -12,5 +12,8 @@
       "composeOverlays": [],
       "notes": "Host-run: ./scripts/run.sh (port 4771). Docker: docker compose up --build -d (published on 127.0.0.1:4771 only). Mock only: no tenant, no credentials. composeFile is an absolute path on this machine; change it if the repo lives elsewhere."
     }
+  ],
+  "pingProducts": [
+    "pingfederate"
   ]
 }
