@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCatalog, resetServer, runScenario } from "./lib/api.js";
+import { getCatalog, getInfo, postMode, resetServer, runScenario } from "./lib/api.js";
 import { fromRun } from "./lib/session.js";
 import { useWorkbench } from "./lib/useWorkbench.js";
 import { fill } from "./lib/fill.js";
@@ -8,6 +8,7 @@ import ServerTab from "./tabs/ServerTab.jsx";
 import TokenTab from "./tabs/TokenTab.jsx";
 import DiagramTab, { START_BOXES } from "./tabs/DiagramTab.jsx";
 import RawTab from "./tabs/RawTab.jsx";
+import ModeToggle from "./components/ModeToggle.jsx";
 
 export const TABS = [["request", "Request"], ["server", "Server"], ["token", "Token"], ["diagram", "Diagram"], ["raw", "Raw"]];
 const read = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
@@ -49,6 +50,13 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
   const [cursor, setCursor] = useState(-1);
   const [boxes, setBoxes] = useState(START_BOXES);
   const tabRefs = useRef({});
+  const [modeInfo, setModeInfo] = useState(null);
+
+  const pickMode = useCallback(async (source) => {
+    try { setModeInfo(await postMode(source)); } catch { /* server refused; refetch the truth */ getInfo().then(setModeInfo).catch(() => {}); }
+  }, []);
+
+  useEffect(() => { getInfo().then(setModeInfo).catch(() => {}); }, []);
 
   const cast = useMemo(() => catalog.verticals.find((v) => v.id === catalog.vertical)?.cast || {}, [catalog]);
   const session = active === "scenario" ? run : wb.session;
@@ -99,6 +107,7 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
       <header className="top">
         <h1><span className="mark" aria-hidden="true">PAR</span> Intent / PAR Inspector</h1>
         <div className="tools-right">
+          <ModeToggle info={modeInfo} onSelect={pickMode} />
           <label className="inline">Persona
             <select value={catalog.vertical} onChange={(e) => pickVertical(e.target.value)} aria-label="Persona and vertical">
               {catalog.verticals.map((v) => <option key={v.id} value={v.id}>{v.name}: {v.cast.user} and {v.cast.agent}</option>)}
