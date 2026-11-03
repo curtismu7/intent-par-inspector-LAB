@@ -89,3 +89,7 @@ code { font-size: 0.85rem; overflow-wrap: anywhere; }
 }
 .skip { position: absolute; left: 0.5rem; top: -4rem; z-index: 10; padding: 0.5rem 0.9rem; background: var(--surface); color: var(--text); border: 2px solid var(--accent); border-radius: 6px; }
 .skip:focus { top: 0.5rem; }
+.mode-toggle { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.mode-toggle button { border: 0; border-radius: 0; padding: 3px 12px; background: var(--surface-2); color: var(--text); font-size: 0.85rem; cursor: default; }
+.mode-toggle button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); font-weight: 700; }
+.mode-toggle button:disabled { opacity: 0.6; }

@@ -26,6 +26,16 @@ export function createApp({ health = createHealth(), as: initialAs = createMockA
   const api = express.Router();
   api.use(express.json({ limit: '8kb' }));
   api.use('/health', health.router);
+  // Mock/Real toggle (rule 19). This app is a mock-only authorization server: every token comes from the in-process
+  // mock AS, so there is no Real side to switch to. Real is always refused with how it would be enabled.
+  const modeInfo = () => ({ source: 'mock', realAvailable: false });
+  api.get('/info', (_req, res) => res.json(modeInfo()));
+  api.post('/mode', (req, res) => {
+    const b = req.body;
+    if (!b || typeof b !== 'object' || Array.isArray(b) || Object.keys(b).length !== 1 || !['mock', 'real'].includes(b.source)) return bad(res, 'body must be exactly {source: "mock" or "real"}');
+    if (b.source === 'real') return bad(res, 'This inspector is mock only: it ships its own in-process mock authorization server and has no real side. Real would need the app to be rebuilt against a live authorization server.', 409);
+    return res.json(modeInfo());
+  });
   api.get('/catalog', (req, res) => {
     const v = getVertical(req.query.vertical || VERTICALS[0].id);
     if (!v) return bad(res, 'unknown vertical');
