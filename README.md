@@ -1,6 +1,6 @@
 # Intent / PAR Inspector
 
-Tier: Tester. An SE demo that shows how Pushed Authorization Requests (RFC 9126) and intent binding work, against a **mock** authorization server. No tenant, no credentials, no outbound network.
+Tier: Demo. An SE demo that shows how Pushed Authorization Requests (RFC 9126) and intent binding work, against a **mock** authorization server. No tenant, no credentials, no outbound network.
 
 Repo: https://github.com/curtismu7/intent-par-inspector-LAB
 
