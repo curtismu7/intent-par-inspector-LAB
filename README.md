@@ -1,10 +1,39 @@
-# Intent / PAR Inspector
+# Intent / PAR Inspector LAB
 
 Tier: Demo. An SE demo that shows how Pushed Authorization Requests (RFC 9126) and intent binding work, against a **mock** authorization server. No tenant, no credentials, no outbound network.
 
 Repo: https://github.com/curtismu7/intent-par-inspector-LAB
 
 Status: **step IP2, integration**, on top of the IP0 core and the IP1 web UI. The UI is React + Vite with five tabs (Request, Server, Token, Diagram, Raw), a hand-driven request builder, a tamper-scenario picker with a story player, a ReactFlow sequence diagram (movable boxes, Simulate, Reset, speed), a persona picker, presenter mode and dark/light themes. You can still drive everything with `curl` or the JSON API.
+
+## Run from a clone
+
+Prerequisites: Node 26. Docker (OrbStack) only for the Docker form.
+
+```
+git clone https://github.com/curtismu7/intent-par-inspector-LAB.git
+cd intent-par-inspector-LAB
+npm ci
+npm run build
+npm run doctor
+npm start
+```
+
+## Ports, and what to do if the port is taken
+
+```
+Ports: intent-par-inspector-LAB listens on 4771 (set with PORT, default 4771).
+Port range for this app: 4700-5299.
+
+If the port is taken:
+1. Find what is using it:
+   lsof -iTCP:4771 -sTCP:LISTEN -n -P
+2. If it is an old copy of this app, stop that process: kill <PID>.
+3. If it is something else, stop it, or start this app on another port:
+   PORT=<other port> npm start
+```
+
+Other variable: `HOST_PORT=4771` (Docker host port). Keep both inside 4700-5299.
 
 ## What it shows
 
