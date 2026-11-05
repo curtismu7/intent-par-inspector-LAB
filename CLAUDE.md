@@ -1,6 +1,6 @@
 # CLAUDE.md: Intent / PAR Inspector LAB
 
-Tier: Tester. An SE demo for Pushed Authorization Requests (RFC 9126) and intent binding, against a mock authorization server. Node 26, Express server (`server/`), React + Vite page (`web/`), loopback only. Repo: https://github.com/ping-sandbox/intent-par-inspector-LAB. Read `README.md` first; the rulebook is `~/Development/STANDALONE-RULES.md` (skill `standalone-demo`).
+Tier: Tester. An SE demo for Pushed Authorization Requests (RFC 9126) and intent binding, against a mock authorization server. Node 26, Express server (`server/`), React + Vite page (`web/`), loopback only. Repo: https://github.com/curtismu7/intent-par-inspector-LAB. Read `README.md` first; the rulebook is `~/Development/STANDALONE-RULES.md` (skill `standalone-demo`).
 
 ## Run and test
 - `npm ci`, `npm test` (server + web + script tests), `npm run doctor`, `npm start` (see package.json / compose for the port). Docker: `docker compose up --build -d`, publishes `127.0.0.1` only.
