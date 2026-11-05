@@ -81,6 +81,7 @@ export function createApp({ health = createHealth(), as: initialAs = createMockA
     console.error('[intent-par-inspector] api error:', err.message);
     return res.status(500).json({ error: 'server_error' });
   });
+  app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
   app.use('/api', api);
 
   // The live mock AS/RS. Form or JSON bodies, as a real AS would take (forms) and as Postman users prefer (JSON).
@@ -94,7 +95,6 @@ export function createApp({ health = createHealth(), as: initialAs = createMockA
   app.use(mock);
 
   if (fs.existsSync(path.join(WEB_DIST, 'index.html'))) {
-app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(WEB_DIST));
     app.get(/^\/(?!api\/|as\/|rs\/).*/, (_req, res) => res.sendFile(path.join(WEB_DIST, 'index.html')));
   }
