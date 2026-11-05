@@ -9,6 +9,7 @@ services:
     ports:
       - "127.0.0.1:${HOST_PORT:-4771}:4771"
     environment:
+      SHELF_URL: ${SHELF_URL:-}
       PORT: "4771"
       INTENT_BIND: 0.0.0.0
     read_only: true
