@@ -10,6 +10,7 @@ import { randomBytes } from 'node:crypto';
 import { createMockAS, CLIENTS, ISSUER, PAR_TTL_S, pkceChallenge } from './as.js';
 import { runScenario, runAll } from './runner.js';
 import { SCENARIOS, VERTICALS, getScenario, getVertical, storyCorpus, renderScenario, baseIntent } from './stories.js';
+import { shelfInfo } from './shelfLink.js';
 
 const WEB_DIST = process.env.WEB_DIST || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist');
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -93,6 +94,7 @@ export function createApp({ health = createHealth(), as: initialAs = createMockA
   app.use(mock);
 
   if (fs.existsSync(path.join(WEB_DIST, 'index.html'))) {
+app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
     app.use(express.static(WEB_DIST));
     app.get(/^\/(?!api\/|as\/|rs\/).*/, (_req, res) => res.sendFile(path.join(WEB_DIST, 'index.html')));
   }
