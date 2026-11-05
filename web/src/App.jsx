@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ShelfLink from "./components/ShelfLink.jsx";
 import { getCatalog, getInfo, postMode, resetServer, runScenario } from "./lib/api.js";
 import { fromRun } from "./lib/session.js";
 import { useWorkbench } from "./lib/useWorkbench.js";
@@ -107,6 +108,7 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
       <header className="top">
         <h1><span className="mark" aria-hidden="true">PAR</span> Intent / PAR Inspector</h1>
         <div className="tools-right">
+            <ShelfLink />
           <ModeToggle info={modeInfo} onSelect={pickMode} />
           <label className="inline">Persona
             <select value={catalog.vertical} onChange={(e) => pickVertical(e.target.value)} aria-label="Persona and vertical">

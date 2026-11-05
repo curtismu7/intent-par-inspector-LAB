@@ -10,6 +10,7 @@ import { randomBytes } from 'node:crypto';
 import { createMockAS, CLIENTS, ISSUER, PAR_TTL_S, pkceChallenge } from './as.js';
 import { runScenario, runAll } from './runner.js';
 import { SCENARIOS, VERTICALS, getScenario, getVertical, storyCorpus, renderScenario, baseIntent } from './stories.js';
+import { shelfInfo } from './shelfLink.js';
 
 const WEB_DIST = process.env.WEB_DIST || path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../web/dist');
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
@@ -80,6 +81,7 @@ export function createApp({ health = createHealth(), as: initialAs = createMockA
     console.error('[intent-par-inspector] api error:', err.message);
     return res.status(500).json({ error: 'server_error' });
   });
+  app.get('/api/shelf', (_req, res) => { res.set('Cache-Control', 'no-store'); res.json(shelfInfo()); }); // the header "Shelf" button
   app.use('/api', api);
 
   // The live mock AS/RS. Form or JSON bodies, as a real AS would take (forms) and as Postman users prefer (JSON).
