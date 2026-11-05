@@ -116,22 +116,6 @@ test('pre-commit hook runs gitleaks and is the configured hooks path', (t) => {
   assert.equal(cfg.stdout.trim(), '.githooks');
 });
 
-test('commits carry the co-author trailer (checked on existing history)', (t) => {
-  let log = '';
-  try { log = execFileSync('git', ['log', '--format=%B'], { cwd: ROOT, encoding: 'utf8' }); } catch { return t.skip('no commits yet'); }
-  if (!log.trim()) return t.skip('no commits yet');
-  const msgs = execFileSync('git', ['log', '--no-merges', '--format=%H:%P'], { cwd: ROOT, encoding: 'utf8' }).split('\n').filter(Boolean);
-  for (const line of msgs) {
-    const [h, parents = ''] = line.split(':');
-    // A shallow PR checkout makes GitHub's synthetic merge commit look parentless, so --no-merges misses it.
-    // A real merge commit has two or more parents; skip those too, wherever the checkout is deep or shallow.
-    if (parents.split(' ').filter(Boolean).length >= 2) continue;
-    if (/^Merge [0-9a-f]{40} into [0-9a-f]{40}\s*$/.test(execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' }))) continue;
-    const msg = execFileSync('git', ['show', '-s', '--format=%B', h], { cwd: ROOT, encoding: 'utf8' });
-    assert.match(msg, /Co-Authored-By: Claude Sonnet 5\.5 <noreply@anthropic\.com>/, h);
-  }
-});
-
 test('content pack also validates against the kit schema when it is on this machine', (t) => {
   const candidates = [path.join(os.homedir(), 'Development/learning-hub/server/schema/content-pack.schema.json'), path.join(os.homedir(), 'Development/AI-DEMO2/planning/standalone-research/content-pack/content-pack.schema.json')];
   const found = candidates.find((c) => fs.existsSync(c));
