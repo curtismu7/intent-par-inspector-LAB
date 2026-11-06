@@ -38,7 +38,7 @@ describe("shell", () => {
     const user = await open();
     await user.click(screen.getByRole("button", { name: "Present" }));
     expect(document.documentElement.dataset.present).toBe("1");
-    await user.click(screen.getByRole("button", { name: /Theme/ }));
+    await user.selectOptions(screen.getByTestId("theme"), "light");
     expect(document.documentElement.dataset.theme).toBe("light");
     await user.click(screen.getByRole("button", { name: "Present" }));
     expect(document.documentElement.dataset.present).toBeUndefined();
