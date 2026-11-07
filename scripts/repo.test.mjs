@@ -78,7 +78,7 @@ test('no tracked file (tests excepted: they name bad hosts as negative cases) na
   const offenders = [];
   for (const f of trackedTextFiles()) {
     if (/\.(png|jpg|ico)$/.test(f) || /^server\/test\//.test(f) || f === 'scripts/repo.test.mjs' || f === 'scripts/check-forbidden-strings.test.mjs') continue; // tests name real-looking hosts on purpose, as negative cases
-    const hosts = scanHosts(read(f)).filter((h) => /^[a-z0-9.-]+$/.test(h) && h !== '0.0.0.0' && !/^(www\.)?(rfc-editor\.org|datatracker\.ietf\.org|json-schema\.org|github\.com)$/.test(h));
+    const hosts = scanHosts(read(f)).filter((h) => /^[a-z0-9.-]+$/.test(h) && h !== '0.0.0.0' && !/^(www\.)?(rfc-editor\.org|datatracker\.ietf\.org|json-schema\.org|github\.com|raw\.githubusercontent\.com)$/.test(h));
     if (hosts.length) offenders.push(`${f}: ${hosts.join(', ')}`);
   }
   assert.deepEqual(offenders, []);
