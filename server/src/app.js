@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
-import { hostCheck, sameOriginWrites, scanHosts } from './safety.js';
+import { makeHostCheck, makeSameOriginWrites, scanHosts } from './safety.js';
 import { createHealth } from './health.js';
 import { randomBytes } from 'node:crypto';
 import { createMockAS, CLIENTS, ISSUER, PAR_TTL_S, pkceChallenge } from './as.js';
@@ -16,12 +16,12 @@ const WEB_DIST = process.env.WEB_DIST || path.resolve(path.dirname(fileURLToPath
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 const bad = (res, message, status = 400) => res.status(status).json({ error: status === 404 ? 'not_found' : 'bad_request', message });
 
-export function createApp({ health = createHealth(), as: initialAs = createMockAS() } = {}) {
+export function createApp({ health = createHealth(), as: initialAs = createMockAS(), proxyHosts = new Set() } = {}) {
   let as = initialAs; // POST /api/reset swaps in a fresh one
   const app = express();
   app.disable('x-powered-by');
-  app.use(hostCheck);
-  app.use(sameOriginWrites);
+  app.use(makeHostCheck(proxyHosts));
+  app.use(makeSameOriginWrites(proxyHosts));
   app.use((_req, res, next) => { res.set('X-Content-Type-Options', 'nosniff'); next(); });
 
   const api = express.Router();

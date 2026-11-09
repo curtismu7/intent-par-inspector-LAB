@@ -103,7 +103,8 @@ test('the server source makes no outbound HTTP calls of its own', () => {
 
 test('no purple in any style or token (house rule)', () => {
   for (const f of trackedTextFiles().filter((x) => /\.(css|html|jsx?|json)$/.test(x) && !/package/.test(x))) {
-    assert.doesNotMatch(read(f), /\b(purple|violet|indigo)\b|#(?:[89ab][0-9a-f]){0}(?:7c3aed|8b5cf6|6d28d9)/i, f);
+    // CSS comments are prose (the shared stylesheet's comment says "no purple"); only the rules are checked.
+    assert.doesNotMatch(read(f).replace(/\/\*[\s\S]*?\*\//g, ''), /\b(purple|violet|indigo)\b|#(?:[89ab][0-9a-f]){0}(?:7c3aed|8b5cf6|6d28d9)/i, f);
   }
 });
 

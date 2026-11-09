@@ -27,10 +27,10 @@ export function flow(as, { client = 'agent-app', intent = INTENT } = {}) {
   return { par, authz, consent, token };
 }
 
-export async function withServer(fn) {
+export async function withServer(fn, { proxyHosts } = {}) {
   const health = createHealth({ intervalMs: 3_600_000 });
   await health.ready;
-  const { server, url } = await startHttpServer({ port: 0, host: '127.0.0.1', app: createApp({ health, as: createMockAS() }) });
+  const { server, url } = await startHttpServer({ port: 0, host: '127.0.0.1', app: createApp({ health, as: createMockAS(), ...(proxyHosts ? { proxyHosts } : {}) }) });
   try { await fn(url.replace(/\/$/, '')); } finally { health.stop(); await new Promise((r) => server.close(r)); }
 }
 
