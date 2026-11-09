@@ -10,6 +10,9 @@ import TokenTab from "./tabs/TokenTab.jsx";
 import DiagramTab, { START_BOXES } from "./tabs/DiagramTab.jsx";
 import RawTab from "./tabs/RawTab.jsx";
 import ModeToggle from "./components/ModeToggle.jsx";
+// Opened from Customer Agent LAB (UC14, UC14b, UC15 and UC-LEARN19 route here): strip + header Back only. No scenario
+// or persona is preselected.
+import ReturnLink from "./return-link/ReturnLink.jsx";
 
 export const TABS = [["request", "Request"], ["server", "Server"], ["token", "Token"], ["diagram", "Diagram"], ["raw", "Raw"]];
 const read = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
@@ -105,9 +108,11 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
       <div className="banner" role="note" data-testid="banner">
         <strong>Mock only.</strong> This is an in-process mock authorization server: no tenant, no outbound network, every token here is issued by the mock with a throwaway key, and every address is a reserved <code>.invalid</code> name.
       </div>
+      <ReturnLink app="intent-par-inspector" />
       <header className="top">
         <h1><span className="mark" aria-hidden="true">PAR</span> Intent / PAR Inspector</h1>
         <div className="tools-right">
+          <ReturnLink app="intent-par-inspector" variant="header" />
             <ShelfLink />
           <ModeToggle info={modeInfo} onSelect={pickMode} />
           <label className="inline">Persona
