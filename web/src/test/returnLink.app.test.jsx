@@ -34,6 +34,14 @@ describe("return link", () => {
     expect(screen.getAllByRole("button", { name: /Back to Customer Agent LAB/ })).toHaveLength(2);
   });
 
+  it("?from=ai-demo-standalone: the strip names AI Demo Standalone and Back goes there", async () => {
+    window.history.replaceState(null, "", "/?from=ai-demo-standalone&uc=UC14");
+    render(<App />);
+    const note = await screen.findByRole("note", { name: "Opened from AI Demo Standalone" });
+    expect(note.textContent).toContain("UC14");
+    expect(screen.getAllByRole("button", { name: /Back to AI Demo Standalone/ })).toHaveLength(2);
+  });
+
   it("no from, an unknown from or a bad id: no strip, no button", async () => {
     for (const q of ["/", "/?from=elsewhere&uc=UC14", "/?from=customer-agent&uc=%3Cb%3E", "/?from=customer-agent&uc=UC14&vertical=a%20b"]) {
       window.history.replaceState(null, "", q);
