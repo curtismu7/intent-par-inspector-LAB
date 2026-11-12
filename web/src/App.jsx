@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import fs from "node:fs";
 import ShelfLink from "./components/ShelfLink.jsx";
+import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 import { getCatalog, getInfo, postMode, resetServer, runScenario } from "./lib/api.js";
 import { fromRun } from "./lib/session.js";
 import { useWorkbench } from "./lib/useWorkbench.js";
@@ -9,10 +11,11 @@ import ServerTab from "./tabs/ServerTab.jsx";
 import TokenTab from "./tabs/TokenTab.jsx";
 import DiagramTab, { START_BOXES } from "./tabs/DiagramTab.jsx";
 import RawTab from "./tabs/RawTab.jsx";
-import ModeToggle from "./components/ModeToggle.jsx";
 // Opened from Customer Agent LAB (UC14, UC14b, UC15 and UC-LEARN19 route here): strip + header Back only. No scenario
 // or persona is preselected.
 import ReturnLink from "./return-link/ReturnLink.jsx";
+
+const LAB_VERSION = (() => { try { return JSON.parse(fs.readFileSync(new URL("../../package.json", import.meta.url), "utf8")).version || null; } catch { return null; } })();
 
 export const TABS = [["request", "Request"], ["server", "Server"], ["token", "Token"], ["diagram", "Diagram"], ["raw", "Raw"]];
 const read = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
@@ -46,6 +49,7 @@ export default function App() {
 
 function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent }) {
   const wb = useWorkbench(catalog);
+  const [fontStep, setFontStep] = useState(() => { const f = read("ipi.font", "M"); return ["S", "M", "L"].includes(f) ? f : "M"; });
   const [run, setRun] = useState(null);
   const [active, setActive] = useState("manual");
   const [scenarioId, setScenarioId] = useState(catalog.scenarios[0].id);
@@ -89,6 +93,7 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
   }, [resetAll]);
 
   const setThemePersist = (t) => { setTheme(t); write("ipi.theme", t); };
+  useEffect(() => { applyFontSize(fontStep); write("ipi.font", fontStep); }, [fontStep]);
   const togglePresent = () => { write("ipi.present", present ? "0" : "1"); setPresent(!present); };
   const go = (id) => { window.location.hash = `#/${id}`; };
   const onTabKey = (e) => {
@@ -113,22 +118,18 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
         <h1><span className="mark" aria-hidden="true">PAR</span> Intent / PAR Inspector</h1>
         <div className="tools-right">
           <ReturnLink app="intent-par-inspector" variant="header" />
+          <TopMenu
+            mode={{ value: modeInfo?.source === "real" ? "real" : "mock", onChange: pickMode, realAvailable: modeInfo ? modeInfo.realAvailable === true : null, realHint: "This inspector is mock only: it ships its own in-process mock authorization server and has no real side." }}
+            vertical={{ value: catalog.vertical, onChange: pickVertical, options: catalog.verticals.map((v) => v.id) }}
+            theme={{ value: theme, onChange: setThemePersist }}
+            fontSize={{ value: fontStep, onChange: setFontStep }}
+            present={{ active: present, onToggle: togglePresent, label: "Present (P)" }}
+            help={{ href: "https://github.com/curtismu7/intent-par-inspector-LAB#readme" }}
+            version={LAB_VERSION}
+            onReset={resetServerState}
+          >
             <ShelfLink />
-          <ModeToggle info={modeInfo} onSelect={pickMode} />
-          <label className="inline">Persona
-            <select value={catalog.vertical} onChange={(e) => pickVertical(e.target.value)} aria-label="Persona and vertical">
-              {catalog.verticals.map((v) => <option key={v.id} value={v.id}>{v.name}: {v.cast.user} and {v.cast.agent}</option>)}
-            </select>
-          </label>
-          <button type="button" className="btn" onClick={resetServerState}>Reset server</button>
-          <button type="button" className="btn" aria-pressed={present} onClick={togglePresent}>Present</button>
-          <label className="inline">Theme
-            <select value={theme} onChange={(e) => setThemePersist(e.target.value)} data-testid="theme">
-              <option value="system">Auto</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-          </label>
+          </TopMenu>
         </div>
       </header>
       <p className="muted" role="status" data-testid="reset-note">{resetNote}</p>

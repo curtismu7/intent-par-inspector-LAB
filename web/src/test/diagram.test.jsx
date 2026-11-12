@@ -13,7 +13,7 @@ describe("diagram", () => {
     render(<App />);
     await screen.findByRole("group", { name: /Sequence diagram/ });
     expect(screen.getByRole("button", { name: "Simulate" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Reset" })).toBeInTheDocument();
+    expect(screen.getByTestId("diagram-reset")).toBeInTheDocument();
     expect(screen.getByLabelText("Speed")).toHaveValue("1");
     for (const t of ["Client", "Mock authorization server", "User consent", "Resource"]) expect(screen.getAllByText(t).length).toBeGreaterThan(0);
     expect(document.querySelectorAll(".react-flow__node")).toHaveLength(4);
@@ -32,7 +32,7 @@ describe("diagram", () => {
     for (let i = 0; i < 3; i++) await act(async () => { await vi.advanceTimersByTimeAsync(1700); });
     expect(caption()).toMatch(/Step 5 of 5/);
     expect(screen.getByRole("button", { name: "Simulate" })).toBeEnabled();
-    act(() => { screen.getByRole("button", { name: "Reset" }).click(); });
+    act(() => { screen.getByTestId("diagram-reset").click(); });
     expect(caption()).toMatch(/Press Simulate/);
   });
 

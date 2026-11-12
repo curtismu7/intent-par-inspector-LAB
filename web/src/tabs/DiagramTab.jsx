@@ -89,7 +89,7 @@ export default function DiagramTab({ app }) {
           <select value={speed} onChange={(e) => setSpeed(e.target.value)}>{SPEEDS.map(([v, t]) => <option key={v} value={v}>{t}</option>)}</select>
         </label>
         <button type="button" className="btn primary" onClick={simulate} disabled={running}>Simulate</button>
-        <button type="button" className="btn" onClick={reset}>Reset</button>
+        <button type="button" className="btn" data-testid="diagram-reset" onClick={reset}>Reset</button>
       </div>
       <div className="flow-wrap" role="group" aria-label="Sequence diagram: client, mock authorization server, user consent and resource. Boxes can be dragged.">
         <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} colorMode={theme}

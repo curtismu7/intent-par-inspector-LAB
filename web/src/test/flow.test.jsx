@@ -23,9 +23,10 @@ describe("shell", () => {
     expect(screen.getByTestId("banner")).toHaveTextContent(/mock only/i);
     expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Request", "Server", "Token", "Diagram", "Raw"]);
     expect(screen.getByRole("tab", { name: "Request" })).toHaveAttribute("aria-selected", "true");
-    expect(screen.getByLabelText("Persona and vertical")).toBeInTheDocument();
+    expect(screen.getByLabelText("Vertical")).toBeInTheDocument();
   });
 
+  it("arrow keys move between tabs", async () => {
   it("arrow keys move between tabs", async () => {
     const user = await open();
     screen.getByRole("tab", { name: "Request" }).focus();
@@ -36,11 +37,11 @@ describe("shell", () => {
 
   it("present mode and theme toggle set document attributes", async () => {
     const user = await open();
-    await user.click(screen.getByRole("button", { name: "Present" }));
+    await user.click(screen.getByRole("button", { name: "Present (P)" }));
     expect(document.documentElement.dataset.present).toBe("1");
-    await user.selectOptions(screen.getByTestId("theme"), "light");
+    await user.selectOptions(screen.getByTestId("theme-select"), "light");
     expect(document.documentElement.dataset.theme).toBe("light");
-    await user.click(screen.getByRole("button", { name: "Present" }));
+    await user.click(screen.getByRole("button", { name: "Exit present (Esc)" }));
     expect(document.documentElement.dataset.present).toBeUndefined();
   });
 
@@ -80,7 +81,7 @@ describe("request builder", () => {
   it("changing the persona reloads the catalog and the default intent", async () => {
     const user = await open();
     expect(screen.getByLabelText("action")).toHaveValue("travel.book_flight");
-    await user.selectOptions(screen.getByLabelText("Persona and vertical"), "banking");
+    await user.selectOptions(screen.getByLabelText("Vertical"), "banking");
     await waitFor(() => expect(screen.getByLabelText("action")).toHaveValue("payments.transfer"));
   });
 });
@@ -150,7 +151,7 @@ describe("reset", () => {
     await tab(user, "Server");
     await user.click(screen.getByRole("button", { name: "Run" }));
     await waitFor(() => expect(screen.getByTestId("verdict")).toBeInTheDocument());
-    await user.click(screen.getByRole("button", { name: "Reset server" }));
+    await user.click(screen.getByRole("button", { name: "Reset" }));
     await waitFor(() => expect(screen.getByTestId("reset-note")).toHaveTextContent(/Mock server reset/));
     expect(screen.queryByTestId("verdict")).toBeNull();
   });

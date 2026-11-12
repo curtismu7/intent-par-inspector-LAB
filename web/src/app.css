@@ -1,6 +1,7 @@
 /* Intent / PAR inspector: layout and components only. Colours, fonts, controls, dark mode and the banner come from
    standalone-ui.css, loaded first. Tokens only here: no colour literals, no theme rules, emphasis by weight.
    The theme button only sets data-theme on <html>. Outcomes are green, amber and red, always with a word beside the colour. */
+html { font-size: var(--fs, 16px); }
 :root[data-present="1"] body { font-size: 20px; }
 :root[data-present="1"] [data-admin-only] { display: none; }
 .page { max-width: 76rem; margin: 0 auto; padding: 1rem 0; }
@@ -14,7 +15,7 @@ a, a:visited { color: var(--status-info); }
 code { font-size: 0.85rem; overflow-wrap: anywhere; }
 .mark { display: inline-grid; place-items: center; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--accent); color: var(--on-accent); font: 700 0.8rem var(--font-mono); letter-spacing: 0.08em; }
 
-.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; padding: 0.6rem 0; }
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; padding: 0.6rem 0; position: relative; }
 .tools-right { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .inline { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); }
 .tabbar { display: flex; overflow-x: auto; padding: 0.4rem 0; gap: 0.4rem; border-bottom: 1px solid var(--border); }
