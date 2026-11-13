@@ -27,7 +27,6 @@ describe("shell", () => {
   });
 
   it("arrow keys move between tabs", async () => {
-  it("arrow keys move between tabs", async () => {
     const user = await open();
     screen.getByRole("tab", { name: "Request" }).focus();
     await user.keyboard("{ArrowRight}");
