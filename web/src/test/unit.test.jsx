@@ -1,6 +1,8 @@
 import React from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { setJsonView } from "../components/JsonPane.jsx";
 import { Inert, reveal } from "../lib/Inert.jsx";
 import { fill } from "../lib/fill.js";
 import { decodeJwt } from "../lib/jwt.js";
@@ -49,6 +51,16 @@ describe("token panel", () => {
     expect(screen.getAllByTestId("intent-claim")).toHaveLength(4);
     expect(screen.getAllByText("BOUND INTENT")).toHaveLength(4);
     expect(screen.getByText(/throwaway key/)).toBeInTheDocument();
+  });
+  it("shows the header and claims through the shared JSON pane: Form by default, the exact JSON one click away", async () => {
+    setJsonView("form");
+    render(<TokenPanel token={{ raw, decoded: decodeJwt(raw) }} />);
+    expect(screen.getByTestId("token-claims")).toHaveTextContent("mark");
+    expect(screen.getByTestId("token-header")).toHaveTextContent("ES256");
+    await userEvent.setup().click(screen.getAllByRole("button", { name: "JSON" })[0]);
+    expect(screen.getByTestId("token-claims")).toHaveTextContent(/"intent_hash": "abc"/);
+    expect(screen.getByTestId("token-header")).toHaveTextContent(/"alg": "ES256"/);
+    setJsonView("form");
   });
   it("says so when there is no token", () => {
     render(<TokenPanel token={null} />);

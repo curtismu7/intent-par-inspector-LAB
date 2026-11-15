@@ -43,15 +43,9 @@ code { font-size: 0.85rem; overflow-wrap: anywhere; }
 .verdict.hold { background: var(--surface-2); color: var(--status-warn); border: 1px solid var(--status-warn); }
 
 .inert { font-family: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
-.inert--block { display: block; margin: 0.25rem 0; padding: 0.6rem; font: 0.82rem/1.45 var(--font-mono); border: 1px dashed var(--border); border-radius: 6px; background: var(--surface-2); max-height: 22rem; overflow: auto; }
+.bound { list-style: none; margin: 0.5rem 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
+.bound .pill { margin-left: 0.4rem; }
 .chip { display: inline-block; padding: 0 0.3em; border: 1px solid var(--danger-text); border-radius: 4px; background: var(--accent-soft); color: var(--danger-text); font: 0.8em var(--font-mono); }
-.jwt { display: block; padding: 0.6rem; border: 1px dashed var(--border); border-radius: 6px; background: var(--surface-2); word-break: break-all; font-size: 0.8rem; }
-.jwt-h { color: var(--status-warn); } .jwt-p { color: var(--status-info); } .jwt-s { color: var(--muted); }
-.claims { width: 100%; border-collapse: collapse; }
-.claims th, .claims td { padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; overflow-wrap: anywhere; font-size: 0.88rem; }
-.claims th[scope=row] { white-space: nowrap; font-family: var(--font-mono); font-weight: 700; }
-.claim--intent { background: var(--accent-soft); color: var(--text); }
-.claim--intent .pill { margin-left: 0.4rem; }
 
 .flow-wrap { height: min(30rem, 70vh); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
 .caption { min-height: 3rem; padding: 0.6rem 0.8rem; border-left: 4px solid var(--accent); background: var(--surface); }
@@ -84,9 +78,6 @@ code { font-size: 0.85rem; overflow-wrap: anywhere; }
   .kv { grid-template-columns: 1fr; }
   .story__step { flex-wrap: wrap; }
   .story__tag { margin-left: 2rem; }
-  .claims thead { display: none; }
-  .claims, .claims tbody, .claims tr, .claims th, .claims td { display: block; width: 100%; }
-  .claims th[scope=row] { white-space: normal; border-bottom: 0; padding-bottom: 0; }
 }
 .skip { position: absolute; left: 0.5rem; top: -4rem; z-index: 10; padding: 0.5rem 0.9rem; background: var(--surface); color: var(--text); border: 2px solid var(--accent); border-radius: 6px; }
 .skip:focus { top: 0.5rem; }
