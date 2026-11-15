@@ -1,40 +1,29 @@
 import React, { useState } from "react";
-import { Inert, pretty } from "../lib/Inert.jsx";
+import { Inert } from "../lib/Inert.jsx";
 import { INTENT_CLAIMS } from "../lib/jwt.js";
+import Json from "../components/JsonPane.jsx";
 
-function Raw({ raw }) {
-  const [h, p, s] = raw.split(".");
-  return <code className="jwt" data-testid="raw-token"><span className="jwt-h">{h}</span>.<span className="jwt-p">{p}</span>.<span className="jwt-s">{s}</span></code>;
-}
-
-/** Raw mock token, then the claims. The claims that carry the bound intent are marked with a word, not only a colour. */
+/** Raw mock token, then the header and claims. The claims that carry the bound intent are stood out in the pane and also named with a word, not only a colour. */
 export function TokenPanel({ token }) {
   if (!token) return <p className="muted">No token yet. A token is issued after the user approves and the code is redeemed.</p>;
   const d = token.decoded;
+  const bound = d ? INTENT_CLAIMS.filter((k) => k in d.payload) : [];
   return (
     <div data-testid="token-panel">
       <p className="muted small">Mock-issued: signed with a throwaway key that exists only in this process. It is shown raw on purpose.</p>
       <h4>Raw token</h4>
-      <Raw raw={token.raw} />
+      <Json value={token.raw} label="Raw token" testId="raw-token" />
       {d ? (
         <>
           <h4>Header</h4>
-          <Inert block text={pretty(d.header)} />
+          <Json value={d.header} label="Token header" testId="token-header" />
           <h4>Claims</h4>
-          <table className="claims">
-            <thead><tr><th scope="col">Claim</th><th scope="col">Value</th></tr></thead>
-            <tbody>
-              {Object.entries(d.payload).map(([k, v]) => {
-                const hot = INTENT_CLAIMS.includes(k);
-                return (
-                  <tr key={k} className={hot ? "claim--intent" : ""} data-testid={hot ? "intent-claim" : undefined}>
-                    <th scope="row">{k}{hot && <span className="pill yes">BOUND INTENT</span>}</th>
-                    <td><Inert text={typeof v === "object" ? JSON.stringify(v) : String(v)} /></td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          <Json value={d.payload} label="Token claims" testId="token-claims" hot={INTENT_CLAIMS} />
+          {bound.length > 0 && (
+            <ul className="bound" aria-label="Claims that carry the bound intent">
+              {bound.map((k) => <li key={k} data-testid="intent-claim"><code>{k}</code><span className="pill yes">BOUND INTENT</span></li>)}
+            </ul>
+          )}
         </>
       ) : <p className="alert">The token could not be decoded.</p>}
     </div>

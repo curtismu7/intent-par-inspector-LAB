@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "../App.jsx";
+import { setJsonView } from "../components/JsonPane.jsx";
 import { installFakeServer } from "./fakeServer.js";
 
 let server;
-beforeEach(() => { window.location.hash = ""; server = installFakeServer(); });
+// The Form | JSON choice is shared module state: every test starts on Form and says so when it needs JSON.
+beforeEach(() => { window.location.hash = ""; setJsonView("form"); server = installFakeServer(); });
 afterEach(cleanup);
 
 async function open() {
@@ -104,7 +106,8 @@ describe("full hand-driven flow", () => {
     expect(within(panel).getByTestId("raw-token").textContent.split(".")).toHaveLength(3);
     const hot = within(panel).getAllByTestId("intent-claim");
     expect(hot.length).toBeGreaterThanOrEqual(3);
-    expect(hot.some((r) => /BOUND INTENT/.test(r.textContent) && /412/.test(r.textContent))).toBe(true);
+    expect(hot.every((r) => /BOUND INTENT/.test(r.textContent))).toBe(true);
+    expect(within(panel).getByTestId("token-claims")).toHaveTextContent("412");
 
     await user.type(screen.getByLabelText(/Amount to send/), "4120");
     await user.click(screen.getByRole("button", { name: "Execute" }));
@@ -197,8 +200,11 @@ describe("raw tab", () => {
     await user.click(screen.getByRole("button", { name: "Push to mock AS" }));
     await screen.findByTestId("push-ok");
     await tab(user, "Raw");
+    // The request body is a form (not JSON), so the whole request stays text; the response has a JSON body, so its headers stay text and the body gets its own pane.
     expect(screen.getByTestId("raw-request")).toHaveTextContent("POST /as/par HTTP/1.1");
-    expect(screen.getByTestId("raw-response")).toHaveTextContent("HTTP/1.1 201 Created");
+    expect(screen.getByTestId("raw-response-head")).toHaveTextContent("HTTP/1.1 201 Created");
+    await user.click(within(screen.getByTestId("raw-response-box")).getByRole("button", { name: "JSON" }));
+    expect(screen.getByTestId("raw-response-body")).toHaveTextContent(/"request_uri": "/);
   });
 });
 

@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Inert } from "../lib/Inert.jsx";
+import Json from "../components/JsonPane.jsx";
+import { INTENT_CLAIMS } from "../lib/jwt.js";
+
+// What a reader looks for on the wire: the pushed request_uri and the bound intent (errors and reasons are already in the alert colour).
+const WIRE_HOT = ["request_uri", ...INTENT_CLAIMS];
 
 export default function RawTab({ app }) {
   const { session, cursor } = app;
@@ -24,8 +28,8 @@ export default function RawTab({ app }) {
             </label>
           </div>
           <div className="cols">
-            <section className="card"><h3>Request</h3><Inert block text={m.request.raw} testid="raw-request" /></section>
-            <section className="card"><h3>Response</h3><Inert block text={m.response.raw} testid="raw-response" /></section>
+            <section className="card"><h3>Request</h3><Json value={m.request.raw} label="Request" testId="raw-request" hot={WIRE_HOT} /></section>
+            <section className="card"><h3>Response</h3><Json value={m.response.raw} label="Response" testId="raw-response" hot={WIRE_HOT} /></section>
           </div>
         </>
       )}
