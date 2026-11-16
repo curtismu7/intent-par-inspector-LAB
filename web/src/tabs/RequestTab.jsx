@@ -2,6 +2,7 @@ import React from "react";
 import { Inert } from "../lib/Inert.jsx";
 import { fill } from "../lib/fill.js";
 
+/** A labelled form row. The control also carries aria-label with the same text: the UI check (A1) cannot see the wrapping label through this component. */
 function Field({ label, children, hint }) {
   return <label className="field"><span>{label}</span>{children}{hint && <small className="muted">{hint}</small>}</label>;
 }
@@ -46,22 +47,22 @@ export default function RequestTab({ app }) {
         <section className="card" aria-labelledby="rq-h">
           <h3 id="rq-h">Authorization request</h3>
           <Field label="Client" hint={client && !client.requirePar ? "PAR is not required for this client: the contrast case." : "PAR is required for this client."}>
-            <select value={form.client} onChange={pickClient}>{catalog.clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+            <select aria-label="Client" value={form.client} onChange={pickClient}>{catalog.clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
           </Field>
-          <Field label="redirect_uri" hint="Must be registered for the client. Edit it to see the refusal."><input value={form.redirect_uri} onChange={set("redirect_uri")} spellCheck="false" /></Field>
-          <Field label="response_type"><input value={form.response_type} onChange={set("response_type")} spellCheck="false" /></Field>
-          <Field label="scope"><input value={form.scope} onChange={set("scope")} spellCheck="false" /></Field>
-          <Field label="state"><input value={form.state} onChange={set("state")} spellCheck="false" /></Field>
-          <Field label="login_hint"><input value={form.login_hint} onChange={set("login_hint")} spellCheck="false" /></Field>
+          <Field label="redirect_uri" hint="Must be registered for the client. Edit it to see the refusal."><input aria-label="redirect_uri" value={form.redirect_uri} onChange={set("redirect_uri")} spellCheck="false" /></Field>
+          <Field label="response_type"><input aria-label="response_type" value={form.response_type} onChange={set("response_type")} spellCheck="false" /></Field>
+          <Field label="scope"><input aria-label="scope" value={form.scope} onChange={set("scope")} spellCheck="false" /></Field>
+          <Field label="state"><input aria-label="state" value={form.state} onChange={set("state")} spellCheck="false" /></Field>
+          <Field label="login_hint"><input aria-label="login_hint" value={form.login_hint} onChange={set("login_hint")} spellCheck="false" /></Field>
           <p className="muted small">PKCE (S256) and the mock client secret are added for you. The Raw tab shows them.</p>
         </section>
         <section className="card" aria-labelledby="in-h">
           <h3 id="in-h">Intent: what is being asked</h3>
-          <Field label="action"><input value={form.intent.action} onChange={setIntent("action")} spellCheck="false" /></Field>
-          <Field label="amount"><input value={form.intent.amount} onChange={setIntent("amount")} inputMode="decimal" spellCheck="false" /></Field>
-          <Field label="currency"><input value={form.intent.currency} onChange={setIntent("currency")} maxLength={3} spellCheck="false" /></Field>
-          <Field label="resource" hint="Reserved .invalid or .example hosts only."><input value={form.intent.resource} onChange={setIntent("resource")} spellCheck="false" /></Field>
-          <Field label="description"><input value={form.intent.description} onChange={setIntent("description")} /></Field>
+          <Field label="action"><input aria-label="action" value={form.intent.action} onChange={setIntent("action")} spellCheck="false" /></Field>
+          <Field label="amount"><input aria-label="amount" value={form.intent.amount} onChange={setIntent("amount")} inputMode="decimal" spellCheck="false" /></Field>
+          <Field label="currency"><input aria-label="currency" value={form.intent.currency} onChange={setIntent("currency")} maxLength={3} spellCheck="false" /></Field>
+          <Field label="resource" hint="Reserved .invalid or .example hosts only."><input aria-label="resource" value={form.intent.resource} onChange={setIntent("resource")} spellCheck="false" /></Field>
+          <Field label="description"><input aria-label="description" value={form.intent.description} onChange={setIntent("description")} /></Field>
           <label className="check"><input type="checkbox" checked={!form.sendIntent} onChange={(e) => setForm((f) => ({ ...f, sendIntent: !e.target.checked }))} /> Leave the intent out (the server should refuse)</label>
         </section>
       </div>

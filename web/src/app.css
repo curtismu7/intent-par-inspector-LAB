@@ -4,8 +4,26 @@
 html { font-size: var(--fs, 16px); }
 :root[data-present="1"] body { font-size: 20px; }
 :root[data-present="1"] [data-admin-only] { display: none; }
-.page { max-width: 76rem; margin: 0 auto; padding: 1rem 0; }
-h1 { margin: 0; font-size: 1.3rem; display: flex; align-items: center; gap: 0.6rem; }
+/* Page frame (STANDALONE-UI-PATTERNS section 3): one centred 1100px column; the simulation banner is its first child.
+   The shared sheet gives the body its 16px side gutter, so the page only adds vertical space. */
+.page { max-width: 1100px; margin: 0 auto; padding: 0 0 2rem; }
+/* Shell bar (section 1): Core Dark in both themes, Ping Red gradient rule, full-bleed (the -16px cancels the body gutter);
+   wraps at 600px. position: relative anchors the TopMenu sign-in slot. The nav pills stay on one row; when the bar is
+   full the TopMenu wraps below them. */
+.shell-bar { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin: 0 -16px; padding: 10px 20px;
+  background: var(--box-dark); color: var(--on-box); border-bottom: 3px solid transparent; border-image: var(--accent-gradient) 1; }
+.shell-bar h1 { margin: 0; color: var(--on-box); font-size: 1.2rem; }
+.shell-brand { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.shell-logo { display: inline-grid; place-items: center; min-width: 30px; height: 30px; padding: 0 4px; border-radius: 4px; background: var(--accent-gradient); color: var(--on-accent); font: 800 0.75rem var(--font-mono); letter-spacing: 0.06em; }
+.shell-badge { padding: 2px 8px; border-radius: 999px; border: 1px solid transparent; background: var(--accent-gradient); color: var(--on-accent); font: 700 0.75rem var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
+.shell-badge--real { background: var(--surface-2); color: var(--status-warn); border-color: var(--status-warn); }
+.shell-nav { display: flex; gap: 4px; flex: 1 1 auto; }
+.shell-nav a, .shell-nav a:visited { padding: 5px 12px; border-radius: 999px; border: 1px solid transparent; color: var(--on-box); text-decoration: none; font-size: 0.875rem; font-weight: 500; white-space: nowrap; }
+.shell-nav a:hover { border-color: var(--on-box); }
+.shell-nav a[aria-current="page"] { background: var(--accent-gradient); color: var(--on-accent); font-weight: 600; }
+.shell-bar .shell-right { margin-left: auto; } /* TopMenu renders .top-menu.shell-right; its own layout stays */
+@media (max-width: 600px) { .shell-bar { gap: 10px; padding: 10px 16px; } .shell-nav { order: 3; flex-basis: 100%; flex-wrap: wrap; gap: 2px; }
+  .shell-nav a, .shell-nav a:visited { padding: 5px 9px; } } /* the five pills fit one row at 375px; larger text sizes wrap */
 h2 { margin: 0.5rem 0 0.25rem; font-size: 1.6rem; }
 h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
 h4 { margin: 0.75rem 0 0.25rem; font-size: 1rem; color: var(--text); }
@@ -13,13 +31,8 @@ h4 { margin: 0.75rem 0 0.25rem; font-size: 1rem; color: var(--text); }
 .small { font-size: 0.85rem; }
 a, a:visited { color: var(--status-info); }
 code { font-size: 0.85rem; overflow-wrap: anywhere; }
-.mark { display: inline-grid; place-items: center; padding: 0.1rem 0.45rem; border-radius: 4px; background: var(--accent); color: var(--on-accent); font: 700 0.8rem var(--font-mono); letter-spacing: 0.08em; }
 
-.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1.25rem; padding: 0.6rem 0; position: relative; }
-.tools-right { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
 .inline { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; color: var(--muted); }
-.tabbar { display: flex; overflow-x: auto; padding: 0.4rem 0; gap: 0.4rem; border-bottom: 1px solid var(--border); }
-.tab { flex: none; padding: 0.6rem 1rem; min-height: 2.75rem; }
 
 .card { padding: 1rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .alert { padding: 0.6rem 0.8rem; border-radius: 6px; background: var(--accent-soft); color: var(--danger-text); border: 1px solid var(--danger-text); }
@@ -74,7 +87,6 @@ code { font-size: 0.85rem; overflow-wrap: anywhere; }
 .story__takeaway { margin: 0.4rem 0 0; font-weight: 700; }
 
 @media (max-width: 600px) {
-  .page { padding: 0.75rem 0; }
   .kv { grid-template-columns: 1fr; }
   .story__step { flex-wrap: wrap; }
   .story__tag { margin-left: 2rem; }

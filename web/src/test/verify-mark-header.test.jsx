@@ -21,7 +21,7 @@ describe("verification mark in the header", () => {
     const restore = withShelf({ shelfUrl: "http://shelf.example", demos: [{ id: "other-lab", verification: mark("in-progress", "In progress") }, { id: "intent-par-inspector", verification: mark("verified", "Verified", { note: "Every tamper scenario refused on the mock" }) }] });
     try {
       render(<App />);
-      await screen.findByRole("tablist");
+      await screen.findByRole("navigation", { name: "Inspector sections" });
       const bar = within(await screen.findByTestId("top-menu"));
       expect(await bar.findByText("Verified")).toBeInTheDocument();
       expect(bar.getByRole("link", { name: "Shelf" })).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("verification mark in the header", () => {
       const restore = withShelf(payload);
       try {
         const { unmount } = render(<App />);
-        await screen.findByRole("tablist");
+        await screen.findByRole("navigation", { name: "Inspector sections" });
         const bar = within(await screen.findByTestId("top-menu"));
         expect(await bar.findByRole("link", { name: "Shelf" })).toBeInTheDocument(); // the shelf answered, and still no badge
         expect(document.querySelector(".verify")).toBeNull();

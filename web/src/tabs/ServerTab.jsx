@@ -6,9 +6,9 @@ import { ScenarioBar, StoryPlayer } from "./Scenarios.jsx";
 
 const FIELDS = ["action", "amount", "currency", "resource", "nonce", "description"];
 
-/** The consent screen: the exact bound intent, field by field, as the server holds it. */
-export function ConsentScreen({ shown, cast, actions }) {
-  const [tamperHash, setTamperHash] = useState(false);
+/** The consent screen: the exact bound intent, field by field, as the server holds it. The decision controls, when the
+    screen is waiting for one, come in as children (ConsentActions). */
+export function ConsentScreen({ shown, cast, children }) {
   if (!shown) return <p className="muted">No consent screen yet. Push a request, then open /authorize.</p>;
   return (
     <div className="consent" data-testid="consent">
@@ -20,16 +20,21 @@ export function ConsentScreen({ shown, cast, actions }) {
         <dt>came from</dt><dd><span className={`pill ${shown.binding === "par" ? "yes" : "no"}`}>{shown.binding === "par" ? "pushed request (PAR)" : "browser link (editable)"}</span></dd>
       </dl>
       <p className="muted small"><Inert text={shown.note} /></p>
-      {actions && (
-        <>
-          <label className="check"><input type="checkbox" checked={tamperHash} onChange={(e) => setTamperHash(e.target.checked)} /> Approve a hash that is not the one shown (tamper)</label>
-          <div className="actions">
-            <button type="button" className="btn primary" onClick={() => actions.decide("approve", { tamper: tamperHash })} disabled={actions.busy}>Approve exactly this</button>
-            <button type="button" className="btn" onClick={() => actions.decide("deny")} disabled={actions.busy}>Deny</button>
-          </div>
-        </>
-      )}
+      {children}
     </div>
+  );
+}
+
+/** Approve or deny the consent screen on display; the tamper choice is kept by the Server tab. */
+function ConsentActions({ actions, tamperHash, setTamperHash }) {
+  return (
+    <>
+      <label className="check"><input type="checkbox" checked={tamperHash} onChange={(e) => setTamperHash(e.target.checked)} /> Approve a hash that is not the one shown (tamper)</label>
+      <div className="actions">
+        <button type="button" className="btn primary" onClick={() => actions.decide("approve", { tamper: tamperHash })} disabled={actions.busy}>Approve exactly this</button>
+        <button type="button" className="btn" onClick={() => actions.decide("deny")} disabled={actions.busy}>Deny</button>
+      </div>
+    </>
   );
 }
 
@@ -57,8 +62,11 @@ export function MessageLog({ session, cursor, setCursor }) {
 export default function ServerTab({ app }) {
   const { wb, cast, session, cursor, setCursor, active } = app;
   const [tamperLink, setTamperLink] = useState(false);
+  const [tamperHash, setTamperHash] = useState(false);
   const manual = active === "manual";
   const shown = (manual ? wb.ctx.shown : null) || shownConsent(session);
+  // One primary per view state (UI patterns section 9): Approve while the consent screen waits for a decision, else Open /authorize.
+  const step = manual && wb.ctx.shown ? "approve" : "open";
   return (
     <>
       <h2>The authorization server</h2>
@@ -67,13 +75,15 @@ export default function ServerTab({ app }) {
         <h3 id="az-h">Your request</h3>
         <label className="check"><input type="checkbox" checked={tamperLink} onChange={(e) => setTamperLink(e.target.checked)} /> Tamper: add an edited intent (ten times the amount) to the link</label>
         <div className="actions">
-          <button type="button" className="btn primary" onClick={() => wb.authorize({ tamper: tamperLink })} disabled={wb.busy || !wb.ctx.requestUri}>Open /authorize</button>
+          <button type="button" className={step === "open" ? "btn primary" : "btn"} onClick={() => wb.authorize({ tamper: tamperLink })} disabled={wb.busy || !wb.ctx.requestUri}>Open /authorize</button>
           <button type="button" className="btn" onClick={wb.redeem} disabled={wb.busy || !wb.ctx.code}>Redeem the code for a token</button>
         </div>
         {!wb.ctx.requestUri && <p className="muted small">Push a request on the Request tab first. Opening the same request_uri twice shows the one-time rule.</p>}
         {wb.error && <p className="alert" role="alert">{wb.error}</p>}
         <h4>Consent screen</h4>
-        <ConsentScreen shown={shown} cast={cast} actions={manual && wb.ctx.shown ? wb : null} />
+        <ConsentScreen shown={shown} cast={cast}>
+          {step === "approve" && <ConsentActions actions={wb} tamperHash={tamperHash} setTamperHash={setTamperHash} />}
+        </ConsentScreen>
       </section>
       <section className="card" aria-labelledby="log-h">
         <h3 id="log-h">Messages</h3>

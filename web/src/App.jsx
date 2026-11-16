@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import fs from "node:fs";
 import ShelfLink from "./components/ShelfLink.jsx";
 import VerifyMark from "./components/VerifyMark.jsx";
@@ -37,15 +37,52 @@ export default function App() {
   useEffect(() => { if (theme === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme; }, [theme]);
   useEffect(() => { if (present) document.documentElement.dataset.present = "1"; else delete document.documentElement.dataset.present; }, [present]);
 
-  const shell = (body) => (
+  if (loadError) return <Frame tab={tab}><p className="alert" role="alert">Could not reach the mock server: {loadError}</p></Frame>;
+  if (!catalog) return <Frame tab={tab}><p className="muted" role="status">Loading the mock authorization server...</p></Frame>;
+  return <Shell catalog={catalog} setCatalog={setCatalog} tab={tab} theme={theme} setTheme={setTheme} present={present} setPresent={setPresent} />;
+}
+
+const go = (id) => { window.location.hash = `#/${id}`; };
+const onNavKey = (e) => {
+  const i = TABS.findIndex(([id]) => `tab-${id}` === e.target.id);
+  if (i < 0) return;
+  const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
+  if (to === undefined) return;
+  e.preventDefault();
+  const [id] = TABS[(to + TABS.length) % TABS.length];
+  go(id); document.getElementById(`tab-${id}`)?.focus();
+};
+
+/** The app shell (STANDALONE-UI-PATTERNS sections 1-2), the same in every state, loading included: the shell bar first,
+    then <main> with the simulation banner as its first child and the return strip right below it. */
+function Frame({ tab, source, menu, children }) {
+  return (
     <>
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
-      {body}
+      <header className="shell-bar">
+        <span className="shell-brand">
+          <span className="shell-logo" aria-hidden="true">PAR</span>
+          <h1>Intent / PAR Inspector</h1>
+          {source === "real"
+            ? <span className="shell-badge shell-badge--real" data-testid="mode-badge">Real</span>
+            : <span className="shell-badge" data-testid="mode-badge">Mock</span>}
+        </span>
+        <nav className="shell-nav" aria-label="Inspector sections" onKeyDown={onNavKey}>
+          {TABS.map(([id, label]) => (
+            <a key={id} id={`tab-${id}`} href={`#/${id}`} aria-current={id === tab ? "page" : undefined} onClick={(e) => { e.preventDefault(); go(id); }}>{label}</a>
+          ))}
+        </nav>
+        {menu}
+      </header>
+      <main className="page" id="main" tabIndex={-1}>
+        <div className="banner" role="note" data-testid="banner">
+          <strong>Mock only.</strong> This is an in-process mock authorization server: no tenant, no outbound network, every token here is issued by the mock with a throwaway key, and every address is a reserved <code>.invalid</code> name.
+        </div>
+        <ReturnLink app="intent-par-inspector" />
+        {children}
+      </main>
     </>
   );
-  if (loadError) return shell(<main className="page" id="main" tabIndex={-1}><p className="alert" role="alert">Could not reach the mock server: {loadError}</p></main>);
-  if (!catalog) return shell(<main className="page" id="main" tabIndex={-1}><p className="muted" role="status">Loading the mock authorization server...</p></main>);
-  return shell(<Shell catalog={catalog} setCatalog={setCatalog} tab={tab} theme={theme} setTheme={setTheme} present={present} setPresent={setPresent} />);
 }
 
 function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent }) {
@@ -58,7 +95,6 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
   const [runError, setRunError] = useState(null);
   const [cursor, setCursor] = useState(-1);
   const [boxes, setBoxes] = useState(START_BOXES);
-  const tabRefs = useRef({});
   const [modeInfo, setModeInfo] = useState(null);
 
   const pickMode = useCallback(async (source) => {
@@ -96,54 +132,30 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
   const setThemePersist = (t) => { setTheme(t); write("ipi.theme", t); };
   useEffect(() => { applyFontSize(fontStep); write("ipi.font", fontStep); }, [fontStep]);
   const togglePresent = () => { write("ipi.present", present ? "0" : "1"); setPresent(!present); };
-  const go = (id) => { window.location.hash = `#/${id}`; };
-  const onTabKey = (e) => {
-    const i = TABS.findIndex(([id]) => id === tab);
-    const to = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: TABS.length - 1 }[e.key];
-    if (to === undefined) return;
-    e.preventDefault();
-    const [id] = TABS[(to + TABS.length) % TABS.length];
-    go(id); tabRefs.current[id]?.focus();
-  };
 
   const app = { catalog, cast, wb, session, run, active, scenarioId, setScenarioId, doRun, running, runError, resetAll, cursor, setCursor, boxes, setBoxes, present, theme, go };
   const Panel = { request: RequestTab, server: ServerTab, token: TokenTab, diagram: DiagramTab, raw: RawTab }[tab];
 
   return (
-    <>
-      <div className="banner" role="note" data-testid="banner">
-        <strong>Mock only.</strong> This is an in-process mock authorization server: no tenant, no outbound network, every token here is issued by the mock with a throwaway key, and every address is a reserved <code>.invalid</code> name.
-      </div>
-      <ReturnLink app="intent-par-inspector" />
-      <header className="top">
-        <h1><span className="mark" aria-hidden="true">PAR</span> Intent / PAR Inspector</h1>
-        <div className="tools-right">
+    <Frame tab={tab} source={modeInfo?.source} menu={
+        <TopMenu
+          mode={{ value: modeInfo?.source === "real" ? "real" : "mock", onChange: pickMode, realAvailable: modeInfo ? modeInfo.realAvailable === true : null, realHint: "This inspector is mock only: it ships its own in-process mock authorization server and has no real side." }}
+          vertical={{ value: catalog.vertical, onChange: pickVertical, options: catalog.verticals.map((v) => v.id) }}
+          theme={{ value: theme, onChange: setThemePersist }}
+          fontSize={{ value: fontStep, onChange: setFontStep }}
+          present={{ active: present, onToggle: togglePresent, label: "Present (P)" }}
+          help={{ href: "https://github.com/curtismu7/intent-par-inspector-LAB#readme" }}
+          version={LAB_VERSION}
+          onReset={resetServerState}
+        >
           <ReturnLink app="intent-par-inspector" variant="header" />
-          <TopMenu
-            mode={{ value: modeInfo?.source === "real" ? "real" : "mock", onChange: pickMode, realAvailable: modeInfo ? modeInfo.realAvailable === true : null, realHint: "This inspector is mock only: it ships its own in-process mock authorization server and has no real side." }}
-            vertical={{ value: catalog.vertical, onChange: pickVertical, options: catalog.verticals.map((v) => v.id) }}
-            theme={{ value: theme, onChange: setThemePersist }}
-            fontSize={{ value: fontStep, onChange: setFontStep }}
-            present={{ active: present, onToggle: togglePresent, label: "Present (P)" }}
-            help={{ href: "https://github.com/curtismu7/intent-par-inspector-LAB#readme" }}
-            version={LAB_VERSION}
-            onReset={resetServerState}
-          >
-            <ShelfLink />
-            <VerifyMark id="intent-par-inspector" />
-          </TopMenu>
-        </div>
-      </header>
+          <ShelfLink />
+          <VerifyMark id="intent-par-inspector" />
+        </TopMenu>
+    }>
       <p className="muted" role="status" data-testid="reset-note">{resetNote}</p>
-      <div className="tabbar" role="tablist" aria-label="Inspector sections" onKeyDown={onTabKey}>
-        {TABS.map(([id, label]) => (
-          <button key={id} id={`tab-${id}`} ref={(el) => { tabRefs.current[id] = el; }} type="button" role="tab" aria-selected={id === tab} aria-controls="main" tabIndex={id === tab ? 0 : -1} className="tab" onClick={() => go(id)}>{label}</button>
-        ))}
-      </div>
-      <main className="page" id="main" role="tabpanel" aria-labelledby={`tab-${tab}`} tabIndex={-1}>
-        <p className="lede" data-admin-only>{fill("{{agent}} wants to do something for {{user}}. The intent travels in the pushed request, so the browser cannot edit it.", cast)}</p>
-        <Panel app={app} />
-      </main>
-    </>
+      <p className="lede" data-admin-only>{fill("{{agent}} wants to do something for {{user}}. The intent travels in the pushed request, so the browser cannot edit it.", cast)}</p>
+      <Panel app={app} />
+    </Frame>
   );
 }

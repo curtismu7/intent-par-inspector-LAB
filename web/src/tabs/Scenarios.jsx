@@ -7,7 +7,8 @@ const KIND = { happy: "Works", hitl: "Human approves", attack: "Attack", contras
 // In a story, a refusal is the point (green). In a hand-driven request it is a stop the SE caused (amber).
 const verdictClass = (v, source) => (v === "completed" ? "ok" : v === "blocked" ? (source === "scenario" ? "ok" : "hold") : v === "attack-succeeded" ? "deny" : "hold");
 
-/** Tamper-scenario picker with Run and Reset. The server runs the story on a fresh mock AS and returns the trace. */
+/** Tamper-scenario picker with Run and Reset. The server runs the story on a fresh mock AS and returns the trace.
+    Run is a secondary button: both tabs that show this bar (Server, Diagram) already have their own primary action. */
 export function ScenarioBar({ app }) {
   const { catalog, scenarioId, setScenarioId, doRun, running, resetAll, runError } = app;
   const picked = catalog.scenarios.find((s) => s.id === scenarioId);
@@ -20,7 +21,7 @@ export function ScenarioBar({ app }) {
             {catalog.scenarios.map((s) => <option key={s.id} value={s.id}>{s.id} · {KIND[s.kind] || s.kind} · {s.title}</option>)}
           </select>
         </label>
-        <button type="button" className="btn primary" onClick={doRun} disabled={running}>{running ? "Running..." : "Run"}</button>
+        <button type="button" className="btn" onClick={doRun} disabled={running}>{running ? "Running..." : "Run"}</button>
         <button type="button" className="btn" onClick={resetAll}>Reset scenario</button>
       </div>
       {picked && <p className="muted small"><Inert text={fill(picked.takeaway, app.cast)} /></p>}
