@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Verification mark in the header: the shared `VerifyMark` (vendored byte for byte from AI-DEMO-Standalone `shared/verify-mark`, pinned) shows this lab's Verified / In progress mark from the demo shelf, inside the top menu beside the Shelf link. It reads the same `GET /api/shelf` call the Shelf link makes, so it shows through the lab-proxy and nothing when the lab is opened on its own port, when the shelf has no mark for it, or when the shelf is unreachable.
+
 ## 0.3.1 (final fix pass)
 - `npm test` is clone-location independent: the shelf-entry test pins the repo-relative tail instead of this machine's absolute path (verified from a fresh clone).
 - netguard now also refuses dns.resolve*, dns.promises.lookup/resolve* and Resolver instances; the UDP guard finds the address by argument position; self-test counts 6 routes and doctor labels them (6/6).
