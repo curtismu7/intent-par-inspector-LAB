@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import fs from "node:fs";
 import ShelfLink from "./components/ShelfLink.jsx";
+import VerifyMark from "./components/VerifyMark.jsx";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
 import { getCatalog, getInfo, postMode, resetServer, runScenario } from "./lib/api.js";
 import { fromRun } from "./lib/session.js";
@@ -129,6 +130,7 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
             onReset={resetServerState}
           >
             <ShelfLink />
+            <VerifyMark id="intent-par-inspector" />
           </TopMenu>
         </div>
       </header>
