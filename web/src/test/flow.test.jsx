@@ -14,26 +14,36 @@ afterEach(cleanup);
 async function open() {
   const user = userEvent.setup();
   render(<App />);
-  await screen.findByRole("tablist");
+  await screen.findByRole("navigation", { name: "Inspector sections" });
   return user;
 }
-const tab = (user, name) => user.click(screen.getByRole("tab", { name }));
+const navLink = (name) => within(screen.getByRole("navigation", { name: "Inspector sections" })).getByRole("link", { name });
+const tab = (user, name) => user.click(navLink(name));
 
 describe("shell", () => {
-  it("shows the mock-only banner, five tabs, and the persona picker", async () => {
+  it("shows the shell bar, then main with the mock-only banner first, five nav pills, and the persona picker", async () => {
     await open();
+    const bar = document.querySelector("header.shell-bar");
+    const main = screen.getByRole("main");
+    expect(bar.compareDocumentPosition(main) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(bar).getByRole("heading", { level: 1 })).toHaveTextContent("Intent / PAR Inspector");
+    expect(within(bar).getByTestId("mode-badge")).toHaveTextContent("Mock");
+    expect(within(bar).getByTestId("top-menu")).toBeInTheDocument();
+    expect(main.firstElementChild).toBe(screen.getByTestId("banner"));
     expect(screen.getByTestId("banner")).toHaveTextContent(/mock only/i);
-    expect(screen.getAllByRole("tab").map((t) => t.textContent)).toEqual(["Request", "Server", "Token", "Diagram", "Raw"]);
-    expect(screen.getByRole("tab", { name: "Request" })).toHaveAttribute("aria-selected", "true");
+    const nav = screen.getByRole("navigation", { name: "Inspector sections" });
+    expect(within(nav).getAllByRole("link").map((t) => t.textContent)).toEqual(["Request", "Server", "Token", "Diagram", "Raw"]);
+    expect(navLink("Request")).toHaveAttribute("aria-current", "page");
+    expect(navLink("Server")).not.toHaveAttribute("aria-current");
     expect(screen.getByLabelText("Vertical")).toBeInTheDocument();
   });
 
-  it("arrow keys move between tabs", async () => {
+  it("arrow keys move between the nav pills", async () => {
     const user = await open();
-    screen.getByRole("tab", { name: "Request" }).focus();
+    navLink("Request").focus();
     await user.keyboard("{ArrowRight}");
-    await waitFor(() => expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute("aria-selected", "true"));
-    expect(screen.getByRole("tab", { name: "Server" })).toHaveFocus();
+    await waitFor(() => expect(navLink("Server")).toHaveAttribute("aria-current", "page"));
+    expect(navLink("Server")).toHaveFocus();
   });
 
   it("present mode and theme toggle set document attributes", async () => {

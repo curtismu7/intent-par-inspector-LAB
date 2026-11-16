@@ -24,13 +24,14 @@ describe("return link", () => {
     for (const [h, f] of pins) expect(createHash("sha256").update(fs.readFileSync(path.join(dir, f))).digest("hex"), f).toBe(h);
   });
 
-  it("?from=customer-agent: banner first, strip right below, header Back in the tools", async () => {
+  it("?from=customer-agent: banner first, strip right below, header Back in the shell bar", async () => {
     window.history.replaceState(null, "", "/?from=customer-agent&uc=UC14&vertical=banking");
     render(<App />);
-    const note = await screen.findByRole("note", NOTE);
+    await screen.findByTestId("top-menu"); // loaded: the loading state shows the same strip, then the loaded shell replaces it
+    const note = screen.getByRole("note", NOTE);
     expect(note.textContent).toContain("UC14");
     expect(screen.getByTestId("banner").nextElementSibling).toBe(note);
-    expect(document.querySelector(".tools-right > button.return-link--header")).not.toBeNull();
+    expect(document.querySelector(".shell-bar .top-menu button.return-link--header")).not.toBeNull();
     expect(screen.getAllByRole("button", { name: /Back to Customer Agent LAB/ })).toHaveLength(2);
   });
 
@@ -46,7 +47,7 @@ describe("return link", () => {
     for (const q of ["/", "/?from=elsewhere&uc=UC14", "/?from=customer-agent&uc=%3Cb%3E", "/?from=customer-agent&uc=UC14&vertical=a%20b"]) {
       window.history.replaceState(null, "", q);
       render(<App />);
-      await screen.findByRole("tablist");
+      await screen.findByRole("navigation", { name: "Inspector sections" });
       expect(screen.queryByRole("button", { name: /Back to/ })).toBeNull();
       expect(screen.queryByRole("note", NOTE)).toBeNull();
       cleanup();
