@@ -6,7 +6,7 @@ html { font-size: var(--fs, 16px); }
 :root[data-present="1"] [data-admin-only] { display: none; }
 /* Page frame (STANDALONE-UI-PATTERNS section 3): one centred 1100px column; the simulation banner is its first child.
    The shared sheet gives the body its 16px side gutter, so the page only adds vertical space. */
-.page { max-width: 1100px; margin: 0 auto; padding: 0 0 2rem; }
+.page { max-width: 2200px; margin: 0 auto; padding: 0 0 2rem; }
 /* Shell bar (section 1): Core Dark in both themes, Ping Red gradient rule, full-bleed (the -16px cancels the body gutter);
    wraps at 600px. position: relative anchors the TopMenu sign-in slot. The nav pills stay on one row; when the bar is
    full the TopMenu wraps below them. */
