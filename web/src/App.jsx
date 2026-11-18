@@ -3,6 +3,8 @@ import fs from "node:fs";
 import ShelfLink from "./components/ShelfLink.jsx";
 import VerifyMark from "./components/VerifyMark.jsx";
 import TopMenu, { applyFontSize } from "./top-menu/TopMenu.jsx";
+import TalkTrackDialog from "./talk-track/TalkTrackDialog.jsx";
+import talkMd from "../../docs/talk-track.md?raw";
 import { getCatalog, getInfo, postMode, resetServer, runScenario } from "./lib/api.js";
 import { fromRun } from "./lib/session.js";
 import { useWorkbench } from "./lib/useWorkbench.js";
@@ -29,6 +31,15 @@ export default function App() {
   const [tab, setTab] = useState(tabFromHash);
   const [theme, setTheme] = useState(() => (["light", "dark"].includes(read("ipi.theme", "")) ? read("ipi.theme", "") : "system"));
   const [present, setPresent] = useState(() => read("ipi.present", "0") === "1");
+  const [talkOpen, setTalkOpen] = useState(false);
+  const talkSteps = (() => {
+    const steps = []; let n = 0;
+    for (const line of talkMd.split("\n")) {
+      const m = line.match(/^\d+\.\s+\*\*(.+?)\.\*\*\s*(.*)$/);
+      if (m) { n += 1; steps.push({ id: `s${n}`, title: m[1], say: m[2] }); }
+    }
+    return steps.length ? steps : [{ id: "s1", title: "Talk track", say: talkMd.slice(0, 600) }];
+  })();
 
   useEffect(() => {
     getCatalog().then(setCatalog).catch((e) => setLoadError(e.message));
@@ -37,9 +48,9 @@ export default function App() {
   useEffect(() => { if (theme === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = theme; }, [theme]);
   useEffect(() => { if (present) document.documentElement.dataset.present = "1"; else delete document.documentElement.dataset.present; }, [present]);
 
-  if (loadError) return <Frame tab={tab}><p className="alert" role="alert">Could not reach the mock server: {loadError}</p></Frame>;
-  if (!catalog) return <Frame tab={tab}><p className="muted" role="status">Loading the mock authorization server...</p></Frame>;
-  return <Shell catalog={catalog} setCatalog={setCatalog} tab={tab} theme={theme} setTheme={setTheme} present={present} setPresent={setPresent} />;
+  if (loadError) return <Frame tab={tab} talkOpen={talkOpen} setTalkOpen={setTalkOpen} talkSteps={talkSteps}><p className="alert" role="alert">Could not reach the mock server: {loadError}</p></Frame>;
+  if (!catalog) return <Frame tab={tab} talkOpen={talkOpen} setTalkOpen={setTalkOpen} talkSteps={talkSteps}><p className="muted" role="status">Loading the mock authorization server...</p></Frame>;
+  return <Shell catalog={catalog} setCatalog={setCatalog} tab={tab} theme={theme} setTheme={setTheme} present={present} setPresent={setPresent} talkOpen={talkOpen} setTalkOpen={setTalkOpen} talkSteps={talkSteps} />;
 }
 
 const go = (id) => { window.location.hash = `#/${id}`; };
@@ -55,7 +66,7 @@ const onNavKey = (e) => {
 
 /** The app shell (STANDALONE-UI-PATTERNS sections 1-2), the same in every state, loading included: the shell bar first,
     then <main> with the simulation banner as its first child and the return strip right below it. */
-function Frame({ tab, source, menu, children }) {
+function Frame({ tab, source, menu, children, talkOpen, setTalkOpen, talkSteps }) {
   return (
     <>
       <a className="skip" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>Skip to content</a>
@@ -81,11 +92,12 @@ function Frame({ tab, source, menu, children }) {
         <ReturnLink app="intent-par-inspector" />
         {children}
       </main>
-    </>
+      <TalkTrackDialog isOpen={talkOpen} onClose={() => setTalkOpen(false)} talk={talkSteps} />
+          </>
   );
 }
 
-function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent }) {
+function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent, talkOpen, setTalkOpen, talkSteps }) {
   const wb = useWorkbench(catalog);
   const [fontStep, setFontStep] = useState(() => { const f = read("ipi.font", "M"); return ["S", "M", "L"].includes(f) ? f : "M"; });
   const [run, setRun] = useState(null);
@@ -137,13 +149,14 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent 
   const Panel = { request: RequestTab, server: ServerTab, token: TokenTab, diagram: DiagramTab, raw: RawTab }[tab];
 
   return (
-    <Frame tab={tab} source={modeInfo?.source} menu={
+    <Frame tab={tab} source={modeInfo?.source} talkOpen={talkOpen} setTalkOpen={setTalkOpen} talkSteps={talkSteps} menu={
         <TopMenu
           mode={{ value: modeInfo?.source === "real" ? "real" : "mock", onChange: pickMode, realAvailable: modeInfo ? modeInfo.realAvailable === true : null, realHint: "This inspector is mock only: it ships its own in-process mock authorization server and has no real side." }}
           vertical={{ value: catalog.vertical, onChange: pickVertical, options: catalog.verticals.map((v) => v.id) }}
           theme={{ value: theme, onChange: setThemePersist }}
           fontSize={{ value: fontStep, onChange: setFontStep }}
           present={{ active: present, onToggle: togglePresent, label: "Present (P)" }}
+          talkTrack={{ active: talkOpen, onToggle: () => setTalkOpen((v) => !v) }}
           help={{ href: "https://github.com/curtismu7/intent-par-inspector-LAB#readme" }}
           version={LAB_VERSION}
           onReset={resetServerState}
