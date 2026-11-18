@@ -1,12 +1,13 @@
 // Decode only. The page never verifies or signs anything: tokens come from the mock authorization server.
-const b64 = (s) => {
-  const bin = atob(s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "="));
-  return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)));
-};
+// Rule 24b: segment decoding is the shared pane's; this keeps the lab's null-on-error shape.
+import { decodeSegment } from "../components/JsonPane.jsx";
 export function decodeJwt(token) {
   try {
     const [h, p, s] = String(token).split(".");
-    return { header: JSON.parse(b64(h)), payload: JSON.parse(b64(p)), signature: s };
+    const header = decodeSegment(h);
+    const payload = decodeSegment(p);
+    if (!header || !payload) return null;
+    return { header, payload, signature: s };
   } catch { return null; }
 }
 // Claims that carry the bound intent: highlighted in the token panel.
