@@ -4,5 +4,4 @@
 .env.bak.*
 .git
 .github
-docs
 scripts

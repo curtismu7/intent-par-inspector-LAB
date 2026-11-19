@@ -41,7 +41,7 @@ export default function RequestTab({ app }) {
 
   return (
     <>
-      <h2>Build the request</h2>
+      <h2><span className="step-num" aria-hidden="true">1</span>Build the request</h2>
       <p className="lede">{fill("{{agent}} asks for {{item}} on behalf of {{user}}. Edit anything, including the intent, then push it to the mock authorization server.", cast)} Break something on purpose to see the refusal.</p>
       <div className="cols">
         <section className="card" aria-labelledby="rq-h">

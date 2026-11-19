@@ -38,7 +38,11 @@ code { font-size: 0.85rem; overflow-wrap: anywhere; }
 .alert { padding: 0.6rem 0.8rem; border-radius: 6px; background: var(--accent-soft); color: var(--danger-text); border: 1px solid var(--danger-text); }
 .controls { display: flex; flex-wrap: wrap; align-items: end; gap: 0.75rem 1.25rem; }
 .controls label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.85rem; color: var(--muted); min-width: 0; max-width: 100%; }
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(24rem, 100%), 1fr)); gap: 1rem; align-items: start; }
+.cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+@media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); } }
+.step-num { display: inline-grid; place-items: center; min-width: 22px; height: 22px; border-radius: 999px;
+  background: var(--accent-gradient); color: var(--on-accent); font: 700 11px var(--font-mono);
+  margin-right: 8px; vertical-align: 2px; }
 .field { display: flex; flex-direction: column; gap: 0.15rem; margin-bottom: 0.6rem; font-size: 0.85rem; color: var(--muted); }
 .field input, .field select { width: 100%; font-family: var(--font-mono); font-size: 0.9rem; }
 .check { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0; font-size: 0.9rem; }
