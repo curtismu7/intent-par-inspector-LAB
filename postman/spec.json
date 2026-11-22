@@ -1,0 +1,233 @@
+{
+  "name": "Intent PAR Inspector LAB",
+  "slug": "intent-par-inspector-lab",
+  "description": "API collection for Intent PAR Inspector LAB: the RFC 9126 PAR endpoint with the lab's intent rule (push an intent, get a one-time request_uri), the intent-invalid negatives, the scenario suite (15 runs), and the safety scan. The authorization server is an in-process mock with a throwaway key; the lab has no live mode.",
+  "baseUrl": "http://localhost:4771",
+  "env": {},
+  "folders": [
+    {
+      "name": "Sanity (mock, labelled)",
+      "description": "Health, the scenario catalog and the safety scan.",
+      "requests": [
+        {
+          "name": "Health",
+          "method": "GET",
+          "path": "/api/health",
+          "tests": [
+            "pm.response.to.have.status(200);",
+            "pm.expect(pm.response.json().state).to.eql('ready');"
+          ]
+        },
+        {
+          "name": "Info",
+          "method": "GET",
+          "path": "/api/info",
+          "tests": [
+            "pm.response.to.have.status(200);"
+          ]
+        },
+        {
+          "name": "Scenario catalog",
+          "method": "GET",
+          "path": "/api/catalog",
+          "tests": [
+            "pm.response.to.have.status(200);",
+            "pm.expect(pm.response.json().verticals.length).to.be.above(0);"
+          ]
+        },
+        {
+          "name": "Safety scan",
+          "method": "GET",
+          "path": "/api/safety-scan",
+          "tests": [
+            "pm.response.to.have.status(200);",
+            "pm.expect(pm.response.json().ok).to.eql(true);"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "PAR endpoint (RFC 9126 + intent rule)",
+      "description": "POST /as/par with Basic client auth. The mock clients are agent-app / partner-app / legacy-web with throwaway secrets. The intent must be a JSON object with action, resource, amount, currency, subject.",
+      "requests": [
+        {
+          "name": "PAR with a valid intent",
+          "method": "POST",
+          "path": "/as/par",
+          "headers": {
+            "Authorization": "Basic {{AGENT_BASIC}}"
+          },
+          "urlencoded": [
+            {
+              "key": "response_type",
+              "value": "code"
+            },
+            {
+              "key": "redirect_uri",
+              "value": "https://agent.example.invalid/callback"
+            },
+            {
+              "key": "scope",
+              "value": "mcp:read"
+            },
+            {
+              "key": "state",
+              "value": "s1"
+            },
+            {
+              "key": "code_challenge",
+              "value": "abc"
+            },
+            {
+              "key": "code_challenge_method",
+              "value": "S256"
+            },
+            {
+              "key": "intent",
+              "value": "{\"action\":\"book\",\"resource\":\"plane ticket SEA-JFK\",\"amount\":420,\"currency\":\"USD\",\"subject\":\"Mark\"}"
+            }
+          ],
+          "prerequest": [
+            "pm.collectionVariables.set('AGENT_BASIC', Buffer.from('agent-app:mock-secret-agent-app').toString('base64'));"
+          ],
+          "tests": [
+            "pm.response.to.have.status(201);",
+            "const b = pm.response.json(); pm.expect(b.request_uri).to.include('urn:ietf:params:oauth:request_uri');",
+            "pm.expect(b.expires_in).to.eql(60);"
+          ]
+        },
+        {
+          "name": "PAR with an unknown client (negative)",
+          "method": "POST",
+          "path": "/as/par",
+          "urlencoded": [
+            {
+              "key": "client_id",
+              "value": "nope"
+            },
+            {
+              "key": "response_type",
+              "value": "code"
+            }
+          ],
+          "tests": [
+            "pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+            "pm.expect(pm.response.json().reason).to.eql('client_auth_failed');"
+          ]
+        },
+        {
+          "name": "PAR without an intent (negative)",
+          "method": "POST",
+          "path": "/as/par",
+          "headers": {
+            "Authorization": "Basic {{AGENT_BASIC}}"
+          },
+          "urlencoded": [
+            {
+              "key": "response_type",
+              "value": "code"
+            },
+            {
+              "key": "redirect_uri",
+              "value": "https://agent.example.invalid/callback"
+            },
+            {
+              "key": "code_challenge",
+              "value": "abc"
+            },
+            {
+              "key": "code_challenge_method",
+              "value": "S256"
+            }
+          ],
+          "tests": [
+            "pm.expect(pm.response.code).to.eql(400);",
+            "pm.expect(pm.response.json().reason).to.eql('intent_required');"
+          ]
+        },
+        {
+          "name": "PAR with a non-JSON intent (negative)",
+          "method": "POST",
+          "path": "/as/par",
+          "headers": {
+            "Authorization": "Basic {{AGENT_BASIC}}"
+          },
+          "urlencoded": [
+            {
+              "key": "response_type",
+              "value": "code"
+            },
+            {
+              "key": "redirect_uri",
+              "value": "https://agent.example.invalid/callback"
+            },
+            {
+              "key": "code_challenge",
+              "value": "abc"
+            },
+            {
+              "key": "code_challenge_method",
+              "value": "S256"
+            },
+            {
+              "key": "intent",
+              "value": "book a ticket"
+            }
+          ],
+          "tests": [
+            "pm.expect(pm.response.code).to.eql(400);",
+            "pm.expect(pm.response.json().reason).to.eql('intent_invalid');"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Scenario suite",
+      "description": "Run one scenario (S01..S08 ids from the catalog) or all of them at once; Reset clears the state.",
+      "requests": [
+        {
+          "name": "Run S01 (happy path)",
+          "method": "POST",
+          "path": "/api/run",
+          "body": {
+            "scenario": "S01"
+          },
+          "tests": [
+            "pm.response.to.have.status(200);",
+            "pm.expect(pm.response.json().schema).to.eql('intent-par-run/1');"
+          ]
+        },
+        {
+          "name": "Run an unknown scenario (negative)",
+          "method": "POST",
+          "path": "/api/run",
+          "body": {
+            "scenario": "NOPE"
+          },
+          "tests": [
+            "pm.expect(pm.response.code).to.eql(400);"
+          ]
+        },
+        {
+          "name": "Run all scenarios",
+          "method": "POST",
+          "path": "/api/run-all",
+          "body": {},
+          "tests": [
+            "pm.response.to.have.status(200);",
+            "pm.expect(pm.response.json().passed).to.eql(pm.response.json().total);"
+          ]
+        },
+        {
+          "name": "Reset",
+          "method": "POST",
+          "path": "/api/reset",
+          "body": {},
+          "tests": [
+            "pm.response.to.have.status(200);"
+          ]
+        }
+      ]
+    }
+  ]
+}

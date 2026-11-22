@@ -47,6 +47,15 @@ Then it shows what is refused: edited amount, swapped resource, replayed or expi
 
 ## Run it
 
+### Postman
+
+`postman/intent-par-inspector-lab.postman_collection.json` drives the mock AS without the UI: the PAR endpoint with Basic client auth (mock secrets, throwaway key) and the intent rule (valid push answers 201 with a one-time `request_uri`; missing/non-JSON intent and an unknown client are the negatives), plus the scenario suite (single and run-all) and the safety scan. No environment needed.
+
+```
+node ../../shared/postman/generator.mjs --spec postman/spec.json            # regenerate (never hand-edit the output)
+npx newman run postman/intent-par-inspector-lab.postman_collection.json
+```
+
 Needs Node 26 or later.
 
 ```

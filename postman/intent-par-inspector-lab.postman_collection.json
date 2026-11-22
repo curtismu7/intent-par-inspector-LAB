@@ -1,0 +1,569 @@
+{
+  "info": {
+    "name": "Intent PAR Inspector LAB",
+    "description": "API collection for Intent PAR Inspector LAB: the RFC 9126 PAR endpoint with the lab's intent rule (push an intent, get a one-time request_uri), the intent-invalid negatives, the scenario suite (15 runs), and the safety scan. The authorization server is an in-process mock with a throwaway key; the lab has no live mode.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "f89504f6-6bb4-4e1c-b1bd-02182618d411"
+  },
+  "item": [
+    {
+      "name": "Sanity (mock, labelled)",
+      "description": "Health, the scenario catalog and the safety scan.",
+      "item": [
+        {
+          "name": "Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);",
+                  "pm.expect(pm.response.json().state).to.eql('ready');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{LAB_BASE}}/api/health",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "health"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Info",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{LAB_BASE}}/api/info",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "info"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Scenario catalog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);",
+                  "pm.expect(pm.response.json().verticals.length).to.be.above(0);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{LAB_BASE}}/api/catalog",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "catalog"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Safety scan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);",
+                  "pm.expect(pm.response.json().ok).to.eql(true);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{LAB_BASE}}/api/safety-scan",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "safety-scan"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "PAR endpoint (RFC 9126 + intent rule)",
+      "description": "POST /as/par with Basic client auth. The mock clients are agent-app / partner-app / legacy-web with throwaway secrets. The intent must be a JSON object with action, resource, amount, currency, subject.",
+      "item": [
+        {
+          "name": "PAR with a valid intent",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Pre-request */",
+                  "pm.collectionVariables.set('AGENT_BASIC', Buffer.from('agent-app:mock-secret-agent-app').toString('base64'));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(201);",
+                  "const b = pm.response.json(); pm.expect(b.request_uri).to.include('urn:ietf:params:oauth:request_uri');",
+                  "pm.expect(b.expires_in).to.eql(60);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic {{AGENT_BASIC}}"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "response_type",
+                  "value": "code"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://agent.example.invalid/callback"
+                },
+                {
+                  "key": "scope",
+                  "value": "mcp:read"
+                },
+                {
+                  "key": "state",
+                  "value": "s1"
+                },
+                {
+                  "key": "code_challenge",
+                  "value": "abc"
+                },
+                {
+                  "key": "code_challenge_method",
+                  "value": "S256"
+                },
+                {
+                  "key": "intent",
+                  "value": "{\"action\":\"book\",\"resource\":\"plane ticket SEA-JFK\",\"amount\":420,\"currency\":\"USD\",\"subject\":\"Mark\"}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/as/par",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "as",
+                "par"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PAR with an unknown client (negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+                  "pm.expect(pm.response.json().reason).to.eql('client_auth_failed');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "client_id",
+                  "value": "nope"
+                },
+                {
+                  "key": "response_type",
+                  "value": "code"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/as/par",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "as",
+                "par"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PAR without an intent (negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.expect(pm.response.code).to.eql(400);",
+                  "pm.expect(pm.response.json().reason).to.eql('intent_required');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic {{AGENT_BASIC}}"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "response_type",
+                  "value": "code"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://agent.example.invalid/callback"
+                },
+                {
+                  "key": "code_challenge",
+                  "value": "abc"
+                },
+                {
+                  "key": "code_challenge_method",
+                  "value": "S256"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/as/par",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "as",
+                "par"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "PAR with a non-JSON intent (negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.expect(pm.response.code).to.eql(400);",
+                  "pm.expect(pm.response.json().reason).to.eql('intent_invalid');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Basic {{AGENT_BASIC}}"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "response_type",
+                  "value": "code"
+                },
+                {
+                  "key": "redirect_uri",
+                  "value": "https://agent.example.invalid/callback"
+                },
+                {
+                  "key": "code_challenge",
+                  "value": "abc"
+                },
+                {
+                  "key": "code_challenge_method",
+                  "value": "S256"
+                },
+                {
+                  "key": "intent",
+                  "value": "book a ticket"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/as/par",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "as",
+                "par"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Scenario suite",
+      "description": "Run one scenario (S01..S08 ids from the catalog) or all of them at once; Reset clears the state.",
+      "item": [
+        {
+          "name": "Run S01 (happy path)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);",
+                  "pm.expect(pm.response.json().schema).to.eql('intent-par-run/1');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario\": \"S01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/api/run",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "run"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Run an unknown scenario (negative)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.expect(pm.response.code).to.eql(400);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scenario\": \"NOPE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/api/run",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "run"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Run all scenarios",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);",
+                  "pm.expect(pm.response.json().passed).to.eql(pm.response.json().total);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/api/run-all",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "run-all"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Reset",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "/* Assertions for this request */",
+                  "pm.response.to.have.status(200);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{LAB_BASE}}/api/reset",
+              "host": [
+                "{{LAB_BASE}}"
+              ],
+              "path": [
+                "api",
+                "reset"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "LAB_BASE",
+      "value": "http://localhost:4771"
+    }
+  ]
+}
