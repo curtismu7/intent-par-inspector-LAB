@@ -3,7 +3,7 @@
     "name": "Intent PAR Inspector LAB",
     "description": "API collection for Intent PAR Inspector LAB: the RFC 9126 PAR endpoint with the lab's intent rule (push an intent, get a one-time request_uri), the intent-invalid negatives, the scenario suite (15 runs), and the safety scan. The authorization server is an in-process mock with a throwaway key; the lab has no live mode.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_postman_id": "f89504f6-6bb4-4e1c-b1bd-02182618d411"
+    "_postman_id": "postman-intent-par-inspector-lab"
   },
   "item": [
     {
@@ -18,9 +18,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);",
-                  "pm.expect(pm.response.json().state).to.eql('ready');"
+                  "pm.test(\"Health\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().state).to.eql('ready');",
+                  "});"
                 ]
               }
             }
@@ -50,8 +51,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);"
+                  "pm.test(\"Info\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
                 ]
               }
             }
@@ -81,9 +83,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);",
-                  "pm.expect(pm.response.json().verticals.length).to.be.above(0);"
+                  "pm.test(\"Scenario catalog\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().verticals.length).to.be.above(0);",
+                  "});"
                 ]
               }
             }
@@ -113,9 +116,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);",
-                  "pm.expect(pm.response.json().ok).to.eql(true);"
+                  "pm.test(\"Safety scan\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().ok).to.eql(true);",
+                  "});"
                 ]
               }
             }
@@ -161,10 +165,11 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(201);",
-                  "const b = pm.response.json(); pm.expect(b.request_uri).to.include('urn:ietf:params:oauth:request_uri');",
-                  "pm.expect(b.expires_in).to.eql(60);"
+                  "pm.test(\"PAR with a valid intent\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const b = pm.response.json(); pm.expect(b.request_uri).to.include('urn:ietf:params:oauth:request_uri');",
+                  "  pm.expect(b.expires_in).to.eql(60);",
+                  "});"
                 ]
               }
             }
@@ -232,9 +237,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
-                  "pm.expect(pm.response.json().reason).to.eql('client_auth_failed');"
+                  "pm.test(\"PAR with an unknown client (negative)\", function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([400, 401]);",
+                  "  pm.expect(pm.response.json().reason).to.eql('client_auth_failed');",
+                  "});"
                 ]
               }
             }
@@ -277,9 +283,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.expect(pm.response.code).to.eql(400);",
-                  "pm.expect(pm.response.json().reason).to.eql('intent_required');"
+                  "pm.test(\"PAR without an intent (negative)\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(400);",
+                  "  pm.expect(pm.response.json().reason).to.eql('intent_required');",
+                  "});"
                 ]
               }
             }
@@ -335,9 +342,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.expect(pm.response.code).to.eql(400);",
-                  "pm.expect(pm.response.json().reason).to.eql('intent_invalid');"
+                  "pm.test(\"PAR with a non-JSON intent (negative)\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(400);",
+                  "  pm.expect(pm.response.json().reason).to.eql('intent_invalid');",
+                  "});"
                 ]
               }
             }
@@ -403,9 +411,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);",
-                  "pm.expect(pm.response.json().schema).to.eql('intent-par-run/1');"
+                  "pm.test(\"Run S01 (happy path)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().schema).to.eql('intent-par-run/1');",
+                  "});"
                 ]
               }
             }
@@ -444,8 +453,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.expect(pm.response.code).to.eql(400);"
+                  "pm.test(\"Run an unknown scenario (negative)\", function () {",
+                  "  pm.expect(pm.response.code).to.eql(400);",
+                  "});"
                 ]
               }
             }
@@ -484,9 +494,10 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);",
-                  "pm.expect(pm.response.json().passed).to.eql(pm.response.json().total);"
+                  "pm.test(\"Run all scenarios\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json().passed).to.eql(pm.response.json().total);",
+                  "});"
                 ]
               }
             }
@@ -525,8 +536,9 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "/* Assertions for this request */",
-                  "pm.response.to.have.status(200);"
+                  "pm.test(\"Reset\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});"
                 ]
               }
             }

@@ -151,6 +151,7 @@ function Shell({ catalog, setCatalog, tab, theme, setTheme, present, setPresent,
   return (
     <Frame tab={tab} source={modeInfo?.source} talkOpen={talkOpen} setTalkOpen={setTalkOpen} talkSteps={talkSteps} menu={
         <TopMenu
+          postman={{ repo: "curtismu7/intent-par-inspector-LAB", slug: "intent-par-inspector-lab" }}
           mode={{ value: modeInfo?.source === "real" ? "real" : "mock", onChange: pickMode, realAvailable: modeInfo ? modeInfo.realAvailable === true : null, realHint: "This inspector is mock only: it ships its own in-process mock authorization server and has no real side." }}
           vertical={{ value: catalog.vertical, onChange: pickVertical, options: catalog.verticals.map((v) => v.id) }}
           theme={{ value: theme, onChange: setThemePersist }}
